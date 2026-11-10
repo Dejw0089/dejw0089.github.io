@@ -36,18 +36,49 @@ a { color: inherit; }
 body > .fz-lang { position: fixed; top: 12px; right: 12px; z-index: 20; }
 .fz-bar .fz-lang { margin-left: 10px; }
 
-/* 音源ゲットのトースト */
-.fz-toast {
-  position: fixed; left: 50%; top: 18%; z-index: 999;
-  transform: translate(-50%, 0) rotate(-4deg) scale(0.2);
-  background: #ffe066; color: #1b1030; border: 4px solid #1b1030;
-  box-shadow: 8px 8px 0 #ff4d6d;
-  padding: 14px 26px; border-radius: 14px; text-align: center;
-  font-family: 'DotGothic16', monospace;
-  animation: fz-pop .45s cubic-bezier(.2, 1.8, .4, 1) forwards, fz-wiggle .3s .45s 4 alternate;
+/* 音源ゲットの演出（画面の真ん中にカード＋紙吹雪。明滅はさせない） */
+.fz-unlock {
+  position: fixed; inset: 0; z-index: 999; display: grid; place-items: center; cursor: pointer;
+  background: radial-gradient(circle at 50% 45%, #ffe06633, #12101acc 60%);
+  animation: fz-fade .25s ease-out;
 }
-.fz-toast-small { font-size: 14px; letter-spacing: .2em; }
-.fz-toast-big { font-size: 28px; margin-top: 4px; }
-.fz-toast.fz-out { transition: .5s; opacity: 0; transform: translate(-50%, -40px) rotate(8deg) scale(.6); }
-@keyframes fz-pop { to { transform: translate(-50%, 0) rotate(-4deg) scale(1); } }
-@keyframes fz-wiggle { from { rotate: -3deg; } to { rotate: 3deg; } }
+.fz-unlock.fz-out { transition: opacity .3s; opacity: 0; }
+.fz-unlock-card {
+  position: relative; text-align: center; padding: 22px 30px 18px; border-radius: 18px; max-width: min(86vw, 420px);
+  background: #ffe066; color: #1b1030; border: 4px solid #1b1030; box-shadow: 8px 8px 0 #ff4d6d, 0 0 60px #ffe06688;
+  font-family: 'DotGothic16', monospace; transform: rotate(-3deg);
+  animation: fz-pop .5s cubic-bezier(.2, 1.8, .4, 1);
+}
+.fz-unlock-title { font-size: 15px; letter-spacing: .25em; }
+.fz-unlock-name { font-size: clamp(28px, 8vw, 40px); margin: 6px 0 4px; line-height: 1.2; }
+.fz-unlock-name::before { content: '♪ '; }
+.fz-unlock-bpm { display: inline-block; font-size: 13px; padding: 2px 10px; border-radius: 999px; background: #1b1030; color: #ffe066; }
+.fz-unlock-hint { font: 12px 'M PLUS Rounded 1c', sans-serif; margin-top: 10px; opacity: .75; }
+.fz-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.fz-confetti i {
+  position: absolute; top: -12px; left: var(--x); width: 8px; height: 13px; border-radius: 2px; opacity: 0;
+  animation: fz-fall var(--d) var(--delay) cubic-bezier(.25, .6, .5, 1) forwards;
+}
+@keyframes fz-fade { from { opacity: 0; } }
+@keyframes fz-pop { from { transform: rotate(-3deg) scale(.2); } to { transform: rotate(-3deg) scale(1); } }
+@keyframes fz-fall {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  100% { opacity: .9; transform: translate(var(--dx), 105vh) rotate(var(--r)); }
+}
+
+/* アプリのページ：そのゲームで出る音源の到達点（ヘッダーの下に固定。スクロールさせない） */
+.fz-drops {
+  position: fixed; top: 52px; left: 0; right: 0; z-index: 9; pointer-events: none;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 0 10px;
+  font: 12px/1.3 'M PLUS Rounded 1c', system-ui, sans-serif;
+}
+.fz-drops-head { font-family: 'DotGothic16', monospace; color: #ffe066; padding: 4px 4px; }
+.fz-drop {
+  background: #1e1a2bdd; border: 1px solid #3a3450; border-radius: 999px; padding: 3px 10px;
+  color: var(--muted); white-space: nowrap;
+}
+.fz-drop.got { color: #ffe066; border-color: #ffe06655; }
+body.void .fz-drops { display: none; }
+body.fz-has-drops { padding-top: var(--fz-top, 110px); }
+.fz-drop.fresh { color: #1b1030; background: #ffe066; border-color: #ffe066; animation: fz-fresh 1.2s ease-out 3; }
+@keyframes fz-fresh { 50% { box-shadow: 0 0 14px #ffe066; } }

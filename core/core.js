@@ -1,4 +1,4 @@
-/* ふざけ箱 共通基盤
+/* 共通基盤（トップの「無駄コーナー」と apps/ の各ゲーム）
  * 各アプリはこれを読み込んで FZ.add / FZ.max を呼ぶだけ。
  * 保存・音源の解放判定・解放演出・セーブコードはここでまとめて面倒を見る。
  *
@@ -8,7 +8,7 @@
  */
 (function () {
   // 更新したらここと各HTMLの ?v= を上げる（GitHub Pagesのキャッシュ対策）
-  const V = '6';
+  const V = '7';
   const KEY = 'fuzake-box-v1';
   const blank = () => ({ v: 1, stats: {}, unlocked: [], since: Date.now() });
 
@@ -28,12 +28,13 @@
   // iOS Safari などでデータが消されにくくなるよう頼んでおく（断られても気にしない）
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
 
-  // 解放ルールは全員共通の /data/unlocks.json
-  let rules = null;
+  // 音源と「ドロップ」（各ゲームの到達点）は全員共通の /data/unlocks.json
+  //   sounds: 音源の一覧 / drops: 「app の stat が gte 以上」になるたびに、まだ持っていない音源がランダムに1つ出る
+  let data = null;
   const rulesReady = fetch('/data/unlocks.json?v=' + V)
     .then(r => r.json())
-    .then(j => { rules = j; check(); return j; })
-    .catch(() => (rules = []));
+    .then(j => { data = j; check(); return j.sounds; })
+    .catch(() => { data = { sounds: [], drops: [] }; return []; });
 
   function stat(app, name) {
     return (state.stats[app] && state.stats[app][name]) || 0;
@@ -47,14 +48,64 @@
   function max(app, name, val) { if (val > stat(app, name)) set(app, name, val); }
 
   function check() {
-    if (!rules) return;
-    for (const r of rules) {
-      if (!state.unlocked.includes(r.id) && stat(r.app, r.stat) >= r.gte) {
-        state.unlocked.push(r.id);
-        save();
-        celebrate(r);
+    if (!data) return;
+    state.drops = state.drops || [];
+    state.dropSounds = state.dropSounds || {};   // どの到達点でどの音源が出たか（アプリのページに出す）
+    for (const d of data.drops) {
+      if (state.drops.includes(d.id) || stat(d.app, d.stat) < d.gte) continue;
+      state.drops.push(d.id);
+      const pool = data.sounds.filter(s => !state.unlocked.includes(s.id));
+      if (pool.length) {
+        const s = pool[Math.floor(Math.random() * pool.length)];
+        state.unlocked.push(s.id);
+        state.dropSounds[d.id] = s.id;
+        freshDrops.add(d.id);
+        celebrate(s);
       }
+      save();
     }
+    paintDrops();
+  }
+
+  // ---- アプリのページ：そのゲームの到達点（条件・進み具合・出た音源）を上に小さく並べる ----
+  // /apps/<id>/ なら自動で出す。スクロールさせないよう、画面上部に固定した1〜2行のチップにする
+  const PAGE_APP = (location.pathname.match(/^\/apps\/([^/]+)\//) || [])[1];
+  // アプリから戻ったとき、トップは「無駄コーナー」の位置から見せる（箱が開いているときだけ。トップ側で見る）
+  if (PAGE_APP) { try { sessionStorage.setItem('fz-from-app', '1'); } catch (e) {} }
+  let dropsEl = null;
+  const freshDrops = new Set();   // このページで今取ったもの（チップを光らせる）
+  function fmt(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
+  function paintDrops() {
+    if (!PAGE_APP || !data || !document.body) return;
+    const mine = data.drops.filter(d => d.app === PAGE_APP);
+    if (!mine.length) return;
+    if (!dropsEl) {
+      dropsEl = document.createElement('div');
+      dropsEl.className = 'fz-drops';
+      document.body.appendChild(dropsEl);
+      document.body.classList.add('fz-has-drops');
+    }
+    dropsEl.textContent = '';
+    const got = mine.filter(d => (state.drops || []).includes(d.id)).length;
+    const head = document.createElement('span');
+    head.className = 'fz-drops-head';
+    head.textContent = '♪ ' + got + '/' + mine.length;
+    dropsEl.appendChild(head);
+    for (const d of mine) {
+      const chip = document.createElement('span');
+      const done = (state.drops || []).includes(d.id);
+      chip.className = 'fz-drop' + (done ? ' got' : '') + (freshDrops.has(d.id) ? ' fresh' : '');
+      const sid = state.dropSounds && state.dropSounds[d.id];
+      const snd = sid && data.sounds.find(s => s.id === sid);
+      if (done) {
+        chip.textContent = '✓ ' + t(d.label) + (snd ? ' → ' + t(snd.name) : '');
+      } else {
+        chip.textContent = '🔒 ' + t(d.label) + ' ' + fmt(Math.min(stat(d.app, d.stat), d.gte)) + '/' + d.gte;
+      }
+      dropsEl.appendChild(chip);
+    }
+    // 中身が帯の下に収まるよう、帯の高さぶんだけ上をあける（行数は画面幅で変わる）
+    document.body.style.setProperty('--fz-top', Math.ceil(dropsEl.getBoundingClientRect().bottom + 6) + 'px');
   }
 
   // ---- 言語（デフォルト英語。進捗とは別に保存し、セーブコードにも含めない） ----
@@ -73,6 +124,7 @@
     document.documentElement.lang = lang;
     if (dictRef) apply(dictRef);
     toggles.forEach(paintToggle);
+    paintDrops();
     langListeners.forEach(fn => fn(lang));
   }
   function onLang(fn) { langListeners.push(fn); }
@@ -108,17 +160,57 @@
     save();
   }
 
-  // ---- 解放演出 ----
-  function celebrate(rule) {
+  // ---- 獲得演出：画面の真ん中にカード＋紙吹雪。その音源を1回鳴らす ----
+  // 一度に複数出たら順番に。タップで閉じる／4秒で自動で閉じる。
+  // てんかんへの配慮で明滅はさせない（ポンと出て、紙吹雪が落ちるだけ）。視差効果を減らす設定なら紙吹雪もなし
+  const toastQueue = [];
+  let toasting = false;
+  function celebrate(sound) {
+    toastQueue.push(sound);
+    if (!toasting) nextToast();
+  }
+  function nextToast() {
+    const sound = toastQueue.shift();
+    if (!sound) { toasting = false; return; }
+    toasting = true;
     const el = document.createElement('div');
-    el.className = 'fz-toast';
-    el.innerHTML = '<div class="fz-toast-small"></div><div class="fz-toast-big"></div>';
-    el.querySelector('.fz-toast-small').textContent = lang === 'ja' ? '音源ゲット！' : 'SOUND UNLOCKED!';
-    el.querySelector('.fz-toast-big').textContent = '♪ ' + t(rule.name);
+    el.className = 'fz-unlock';
+    el.setAttribute('role', 'status');
+    el.innerHTML = '<div class="fz-confetti" aria-hidden="true"></div>' +
+      '<div class="fz-unlock-card"><div class="fz-unlock-title"></div><div class="fz-unlock-name"></div>' +
+      '<div class="fz-unlock-bpm"></div><div class="fz-unlock-hint"></div></div>';
+    el.querySelector('.fz-unlock-title').textContent = lang === 'ja' ? '音源ゲット！' : 'NEW SOUND!';
+    el.querySelector('.fz-unlock-name').textContent = t(sound.name);
+    el.querySelector('.fz-unlock-bpm').textContent = sound.bpm + ' BPM';
+    el.querySelector('.fz-unlock-hint').textContent = lang === 'ja' ? 'トップの「グルーヴ機」で鳴らせます（タップで閉じる）' : 'Play it in the Groove Machine on the top page (tap to close)';
+    let calm = false;
+    try { calm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    if (!calm) {
+      const box = el.querySelector('.fz-confetti');
+      const colors = ['#ff8fa3', '#ffe066', '#8ce99a', '#74c0fc', '#b197fc', '#ffa94d'];
+      for (let i = 0; i < 36; i++) {
+        const p = document.createElement('i');
+        p.style.setProperty('--x', (Math.random() * 100).toFixed(1) + '%');
+        p.style.setProperty('--dx', (Math.random() * 120 - 60).toFixed(0) + 'px');
+        p.style.setProperty('--r', (Math.random() * 720 - 360).toFixed(0) + 'deg');
+        p.style.setProperty('--d', (1.4 + Math.random() * 1.2).toFixed(2) + 's');
+        p.style.setProperty('--delay', (Math.random() * 0.25).toFixed(2) + 's');
+        p.style.background = colors[i % colors.length];
+        box.appendChild(p);
+      }
+    }
     document.body.appendChild(el);
-    try { new Audio(rule.file).play().catch(() => {}); } catch (e) {}
-    setTimeout(() => el.classList.add('fz-out'), 2600);
-    setTimeout(() => el.remove(), 3200);
+    try { new Audio(sound.file).play().catch(() => {}); } catch (e) {}
+    let closed = false;
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      clearTimeout(timer);
+      el.classList.add('fz-out');
+      setTimeout(() => { el.remove(); nextToast(); }, 300);
+    };
+    el.addEventListener('click', close);
+    const timer = setTimeout(close, 4000);
   }
 
   // ---- セーブコード（端末の引っ越し・Safariに消された時の保険） ----

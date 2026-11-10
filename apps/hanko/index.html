@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Stamp Rush | Yusuke Iwasaki</title>
+<link rel="stylesheet" href="/core/core.css?v=7">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  #stage { width: min(88vw, 420px); touch-action: none; cursor: pointer; }
+  #hud { display: flex; justify-content: space-between; align-items: baseline; font-family: 'DotGothic16', monospace; margin-bottom: 10px; }
+  #time { font-size: 34px; color: #e63946; }
+  #count { font-size: 34px; color: #ffe066; }
+  #count small, #time small { font-size: 14px; color: var(--muted); margin-left: 4px; }
+  /* 机は「画面の高さ − 上の帯 − 上下の文字」に収まる大きさまで */
+  #desk { position: relative; height: min(110vw, 460px, calc(100dvh - var(--fz-top, 60px) - 215px)); min-height: 200px; }
+  .doc { position: absolute; inset: 0; background: #f4efe3; color: #2b2b2b; border-radius: 6px; box-shadow: 0 10px 30px #0008;
+         padding: 22px 20px; text-align: left; font-family: 'Noto Sans JP', 'M PLUS Rounded 1c', sans-serif; overflow: hidden;
+         transition: transform .25s ease-in, opacity .25s; }
+  .doc h3 { margin: 0 0 4px; font-size: 19px; letter-spacing: .04em; line-height: 1.35; }
+  .doc .no { font-size: 12px; color: #777; }
+  .doc .line { height: 8px; background: #d9d2c2; border-radius: 4px; margin: 12px 0; }
+  .doc .line.s { width: 60%; }
+  .doc.gone { transform: translateX(120%) rotate(18deg); opacity: 0; }
+  .stamp { position: absolute; width: 74px; height: 74px; margin: -37px 0 0 -37px; border: 4px solid #d62828; border-radius: 50%;
+           color: #d62828; display: grid; place-items: center; font: 700 22px 'Noto Sans JP', sans-serif; letter-spacing: -.05em;
+           opacity: .85; mix-blend-mode: multiply; transform: rotate(var(--r)); animation: thump .12s ease-out; }
+  @keyframes thump { from { transform: scale(1.8) rotate(var(--r)); opacity: 0; } to { transform: scale(1) rotate(var(--r)); } }
+  #say { font-weight: 800; font-size: 18px; min-height: 2.6em; padding: 0 20px; margin-top: 16px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div id="stage" role="button" tabindex="0">
+    <div id="hud"><div id="time">10.0<small>s</small></div><div id="count">0<small data-i18n="unit"></small></div></div>
+    <div id="desk"></div>
+  </div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=7"></script>
+<script>
+const APP = 'hanko';
+const ROUND = 10;          // 秒
+const PER_DOC = 5;         // 1枚に押す数
+const T = {
+  en: {
+    back: '← Back', title: 'Stamp Rush', unit: 'stamps',
+    intro: 'Tap to stamp. You have 10 seconds from the first stamp. Approve everything. Read nothing. Use as many fingers as you like.',
+    stamp: '承認',
+    // 承認すると、その承認のための書類が出てくる
+    docs: ['Request for Approval', 'Application to Approve the Request for Approval', 'Approval of the Application to Approve',
+           'Permission to Use a Stamp', 'Receipt Confirming the Permission', 'Report Confirming the Receipt Was Confirmed',
+           'Request to Change the Report Format', 'Request to Stop Making Requests'],
+    docNo: n => 'No. ' + n + ' / Please read carefully (nobody does)',
+    rec: (s, b) => 'Total stamps ' + s + ' / Best ' + b + ' in 10s',
+    result: c => c + ' approvals. The company changed nothing. ' +
+      (c >= 45 ? 'Promoted to Director of Stamping.' : c >= 25 ? 'Promoted to section chief. You now receive more documents.' :
+       c >= 10 ? 'A diligent employee.' : 'The request is still circulating.'),
+    again: 'Tap again to start the next fiscal year.',
+  },
+  ja: {
+    back: '← 戻る', title: 'ハンコ連打', unit: '件',
+    intro: 'タップでハンコ。最初の1回から10秒間、すべてを承認してください。中身は読まなくていいです。指は何本使ってもいいです。',
+    stamp: '承認',
+    docs: ['稟議書', '稟議書の承認申請書', '承認申請書の承認について', 'ハンコ使用許可願', '使用許可願の受領確認書',
+           '受領確認書を確認したことの報告書', '報告書の様式変更に関する稟議書', '稟議を減らすための稟議書'],
+    docNo: n => '第' + n + '号　よくお読みください（誰も読みません）',
+    rec: (s, b) => '累計 ' + s + ' 件 / 10秒の最高 ' + b + ' 件',
+    result: c => c + '件承認しました。会社は何も変わりませんでした。' +
+      (c >= 45 ? 'ハンコ担当部長に昇進しました。' : c >= 25 ? '課長に昇進。書類が増えました。' :
+       c >= 10 ? '勤勉な社員です。' : 'まだ稟議が回っています。'),
+    again: 'もう一度タップで来期が始まります。',
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const $ = id => document.getElementById(id);
+const stage = $('stage'), desk = $('desk'), timeEl = $('time'), countEl = $('count'), say = $('say'), rec = $('rec');
+
+let state = 'ready';   // ready → running → cooldown → ready
+let t0 = 0, count = 0, onDoc = 0, docNo = 1, doc = null, tick = null;
+
+function newDoc() {
+  if (doc) { const old = doc; old.classList.add('gone'); setTimeout(() => old.remove(), 260); }
+  doc = document.createElement('div');
+  doc.className = 'doc';
+  doc.innerHTML = '<h3></h3><div class="no"></div>' + '<div class="line"></div>'.repeat(5) + '<div class="line s"></div>';
+  doc.querySelector('h3').textContent = L.docs[(docNo - 1) % L.docs.length];
+  doc.querySelector('.no').textContent = L.docNo(docNo++);
+  desk.appendChild(doc);
+  onDoc = 0;
+}
+
+let ctx = null;
+function thud() {
+  try {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    const n = Math.floor(ctx.sampleRate * 0.05);
+    const b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n / 8));
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'lowpass'; f.frequency.value = 900;
+    g.gain.value = 0.6;
+    s.buffer = b;
+    s.connect(f).connect(g).connect(ctx.destination);
+    s.start();
+  } catch (e) {}
+}
+
+function paintCount() { countEl.innerHTML = count + '<small>' + L.unit + '</small>'; }
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'stamps'), FZ.stat(APP, 'best')); }
+
+function stamp(e) {
+  if (state === 'running' && performance.now() - t0 >= ROUND * 1000) { finish(); return; }  // 10秒を過ぎた1打は数えない
+  if (state === 'cooldown') return;
+  if (state === 'ready') start();
+  const r = desk.getBoundingClientRect();
+  const x = e && e.clientX ? e.clientX - r.left : r.width * (0.2 + Math.random() * 0.6);
+  const y = e && e.clientY ? e.clientY - r.top : r.height * (0.25 + Math.random() * 0.6);
+  const s = document.createElement('div');
+  s.className = 'stamp';
+  s.textContent = L.stamp;
+  s.style.left = Math.max(30, Math.min(r.width - 30, x)) + 'px';
+  s.style.top = Math.max(60, Math.min(r.height - 30, y)) + 'px';
+  s.style.setProperty('--r', (Math.random() * 40 - 20) + 'deg');
+  doc.appendChild(s);
+  thud();
+  count++;
+  paintCount();
+  FZ.add(APP, 'stamps', 1);
+  if (++onDoc >= PER_DOC) newDoc();
+}
+
+function start() {
+  state = 'running';
+  t0 = performance.now();
+  count = 0;
+  say.textContent = '';
+  tick = setInterval(update, 50);
+}
+function update() {
+  const left = Math.max(0, ROUND - (performance.now() - t0) / 1000);
+  timeEl.innerHTML = left.toFixed(1) + '<small>s</small>';
+  show();
+  if (left <= 0) finish();
+}
+function finish() {
+  if (state !== 'running') return;
+  clearInterval(tick);
+  state = 'cooldown';
+  FZ.max(APP, 'best', count);
+  say.textContent = L.result(count);
+  show();
+  const c = count;
+  setTimeout(() => {
+    state = 'ready';
+    timeEl.innerHTML = ROUND.toFixed(1) + '<small>s</small>';
+    say.textContent = L.result(c) + ' ' + L.again;
+  }, 1500);
+}
+
+stage.addEventListener('pointerdown', e => { e.preventDefault(); stamp(e); });
+document.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); stamp(null); }
+});
+
+newDoc();
+paintCount();
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); paintCount(); show(); });
+</script>
+</body>
+</html>

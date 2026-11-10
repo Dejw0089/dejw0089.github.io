@@ -7,5 +7,14 @@
     "desc":  { "en": "Stir in circles. Master the stickiness.", "ja": "ぐるぐるして粘りを極めろ。" } },
   { "id": "kyomu", "emoji": "🕳️", "color": "#6c63ff",
     "title": { "en": "Void Timer", "ja": "虚無タイマー" },
-    "desc":  { "en": "Compete at doing nothing. Touch anything and you lose.", "ja": "何もしない時間を競う。触ったら負け。" } }
+    "desc":  { "en": "Compete at doing nothing. Touch anything and you lose.", "ja": "何もしない時間を競う。触ったら負け。" } },
+  { "id": "somen", "emoji": "🥢", "color": "#7fb069",
+    "title": { "en": "Somen Slide", "ja": "流しそうめん" },
+    "desc":  { "en": "Only catch the somen. Other things flow too.", "ja": "そうめんだけ取れ。そうめん以外も流れてくる。" } },
+  { "id": "hanko", "emoji": "💮", "color": "#e63946",
+    "title": { "en": "Stamp Rush", "ja": "ハンコ連打" },
+    "desc":  { "en": "Approve everything for 10 seconds. Read nothing.", "ja": "10秒間すべてを承認しろ。中身は読むな。" } },
+  { "id": "nekosui", "emoji": "🐈", "color": "#f4a261",
+    "title": { "en": "Cat Sniffing", "ja": "猫吸い" },
+    "desc":  { "en": "Hold to sniff the cat. Let go before it gets angry.", "ja": "長押しで猫を吸え。怒られる前に離せ。" } }
 ]

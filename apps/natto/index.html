@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Natto Stirrer — FUZAKE BOX</title>
-<link rel="stylesheet" href="/core/core.css?v=6">
+<title>Natto Stirrer | Yusuke Iwasaki</title>
+<link rel="stylesheet" href="/core/core.css?v=7">
 <style>
   body { overflow: hidden; user-select: none; -webkit-user-select: none; }
+  body.fz-has-drops { padding-top: 0; }  /* 全画面キャンバスなので、帯はその上に重ねるだけ */
   canvas { display: block; width: 100vw; height: 100vh; touch-action: none; cursor: grab; }
   .hud { position: fixed; left: 0; right: 0; bottom: 24px; text-align: center; pointer-events: none; }
   #rot { font: 40px 'DotGothic16', monospace; color: #ffe066; }
@@ -22,25 +23,25 @@
   <div id="msg" data-i18n="intro"></div>
   <div id="total"></div>
 </div>
-<script src="/core/core.js?v=6"></script>
+<script src="/core/core.js?v=7"></script>
 <script>
 const APP = 'natto';
 const T = {
   en: {
-    back: '← FUZAKE BOX', title: 'Natto Stirrer', intro: 'Trace circles around the bowl to stir',
+    back: '← Back', title: 'Natto Stirrer', intro: 'Trace circles around the bowl to stir',
     rot: n => n + ' stirs', total: n => 'Lifetime stirs: ' + n,
     msgs: { 5: 'Still just beans.', 20: 'A few threads appear', 50: 'Getting sticky', 100: 'Sticky', 200: 'Sticky sticky sticky',
             300: 'A gourmet somewhere nods in approval', 424: 'It is mostly threads now', 1000: 'The natto has become the universe' },
   },
   ja: {
-    back: '← ふざけ箱', title: '納豆まぜまぜ', intro: '器のまわりをぐるぐるなぞってまぜろ',
+    back: '← 戻る', title: '納豆まぜまぜ', intro: '器のまわりをぐるぐるなぞってまぜろ',
     rot: n => n + ' 回', total: n => '生涯まぜ回数 ' + n + ' 回',
     msgs: { 5: 'まだ豆。', 20: 'ちょっと糸が出てきた', 50: '粘りが出てきた', 100: 'ネバネバ', 200: 'ネバネバネバネバ',
             300: '北大路魯山人が頷いている', 424: 'もはや糸しかない', 1000: '納豆が宇宙になった' },
   },
 };
 let L = FZ.apply(T);
-function setTitle() { document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX'); }
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
 setTitle();
 FZ.langToggle(document.getElementById('right'));
 const cv = document.getElementById('c'), g = cv.getContext('2d');

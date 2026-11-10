@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Void Timer — FUZAKE BOX</title>
-<link rel="stylesheet" href="/core/core.css?v=6">
+<title>Void Timer | Yusuke Iwasaki</title>
+<link rel="stylesheet" href="/core/core.css?v=7">
 <style>
   body { display: grid; place-items: center; text-align: center; transition: background 2s; user-select: none; }
   body.void { background: #000; }
@@ -24,12 +24,12 @@
   <button id="start" data-i18n="start"></button>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=6"></script>
+<script src="/core/core.js?v=7"></script>
 <script>
 const APP = 'kyomu';
 const T = {
   en: {
-    back: '← FUZAKE BOX', title: 'Void Timer', start: 'Enter the void', again: 'Void again',
+    back: '← Back', title: 'Void Timer', start: 'Enter the void', again: 'Void again',
     intro: 'Measures how long you do nothing.<br>Touch the mouse, keys or screen and it ends.',
     lines: [[3, '…'], [8, 'You are doing nothing nicely'], [15, 'The void deepens'], [25, 'Something is about to… not happen'],
             [30, 'You are, right now, doing nothing'], [45, 'Someone behind the screen is watching (no one is)'], [60, '1 minute. A respectable void'],
@@ -39,7 +39,7 @@ const T = {
     moved: 'You moved.', touched: 'You touched it.', key: 'You pressed a key.', wheel: 'You scrolled.', away: 'You looked away.',
   },
   ja: {
-    back: '← ふざけ箱', title: '虚無タイマー', start: '虚無を始める', again: 'もう一度虚無る',
+    back: '← 戻る', title: '虚無タイマー', start: '虚無を始める', again: 'もう一度虚無る',
     intro: '何もしない時間を計ります。<br>マウスもキーも画面も触ったら終わり。',
     lines: [[3, '…'], [8, 'いい感じに何もしていません'], [15, '虚無が深まってきました'], [25, 'あと少しで何かが…起きません'],
             [30, 'あなたは今、何もしていない'], [45, '画面の向こうで誰かが見ています（いません）'], [60, '1分。立派な虚無です'],
@@ -50,7 +50,7 @@ const T = {
   },
 };
 let L = FZ.apply(T);
-function setTitle() { document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX'); }
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
 setTitle();
 FZ.langToggle(document.getElementById('right'));
 

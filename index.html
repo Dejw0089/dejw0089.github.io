@@ -8,7 +8,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#f7f6f2">
-<link rel="stylesheet" href="/core/core.css?v=6">
+<link rel="stylesheet" href="/core/core.css?v=7">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <script>
   // 描画前に言語を決めておく（ちらつき防止）
@@ -46,6 +46,7 @@
   .il1 { font-family: 'Inter', 'Noto Sans JP', sans-serif; color: #3b4252; font-size: 15px; }
   .il2 { font-family: 'Inter', 'Noto Sans JP', sans-serif; color: #4b3f6b; font-size: 17px; letter-spacing: .06em; transform: rotate(-.6deg); }
   .il3 { font-family: 'DotGothic16', monospace; color: #efe9ff; font-size: 26px; transform: rotate(2.5deg); }
+  .sound-note { font-family: 'Inter', 'Noto Sans JP', sans-serif; color: #efe9ffcc; font-size: 13px; margin-top: -18px !important; }
   .il4 { font-family: 'DotGothic16', monospace; color: #ffe066; font-size: clamp(26px, 6vw, 40px); line-height: 1.35;
          text-shadow: 3px 3px 0 #ff4d6d; animation: wob 2.2s ease-in-out infinite; max-width: 640px; padding: 0 16px; }
   @keyframes wob { 0%, 100% { transform: rotate(-2deg) scale(1); } 50% { transform: rotate(2deg) scale(1.04); } }
@@ -70,7 +71,9 @@
   #gift.shut { opacity: 0; transform: translateY(-16px) scale(.97); pointer-events: none; }
   h1.boxname { font-family: 'DotGothic16', monospace; font-size: clamp(36px, 9vw, 60px); margin: 40px 0 0; line-height: 1;
                color: #ffe066; text-shadow: 4px 4px 0 var(--accent); transform: rotate(-2deg); }
-  .tag { color: var(--muted); margin: 14px 0 28px; line-height: 1.7; }
+  h1.boxname { scroll-margin-top: 24px; }
+  .intent { color: var(--muted); font-size: 11.5px; line-height: 1.6; margin: 14px 0 0; opacity: .8; }
+  .tag { color: var(--muted); margin: 10px 0 28px; line-height: 1.7; }
   .fun h2 { font-family: 'DotGothic16', monospace; font-size: 22px; margin: 36px 0 14px; }
   .fun h2 small { color: var(--muted); font-size: 14px; margin-left: 8px; }
 
@@ -82,7 +85,62 @@
   .app .t { font-weight: 800; font-size: 19px; margin-top: 6px; color: var(--c); }
   .app .d { color: var(--muted); font-size: 14px; margin-top: 4px; }
 
-  .groove { background: var(--card); border-radius: 16px; padding: 16px; }
+  .groove { background: var(--card); border-radius: 16px; padding: 16px; position: relative; overflow: hidden; isolation: isolate;
+            --pulse: 0; --gc: #ffe066; }
+  .groove > :not(.fx) { position: relative; z-index: 1; }
+
+  /* ===== 再生中の演出 =====
+     てんかんへの配慮：
+     - 光の強弱は毎秒2回まで（速いテンポは2・4・16拍に1回にまとめる）。パッと点滅させず、ふわっと立ち上がって消える
+     - 光るのはこの枠の中だけ。明るさの変化も小さく
+     - OSの「視差効果を減らす」がオンなら最初からOFF。ボタンでいつでも切れる */
+  .fx { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .6s; }
+  .groove.lit .fx { opacity: 1; }
+  .fx-glow { position: absolute; inset: 0;
+             background: radial-gradient(120% 90% at 50% 110%, var(--gc), transparent 60%);
+             opacity: calc(.05 + var(--pulse) * .17); }
+  .fx-beams { position: absolute; left: 50%; top: 115%; width: 260%; aspect-ratio: 1; translate: -50% -50%; opacity: .1;
+              background: repeating-conic-gradient(from 0deg, var(--gc) 0 4deg, transparent 4deg 30deg);
+              animation: beams 14s linear infinite; }
+  @keyframes beams { to { rotate: 360deg; } }
+  .groove.lit .trk.on { transform: scale(calc(1 + var(--pulse) * .025)); box-shadow: 0 0 calc(10px + var(--pulse) * 14px) #ffe06655; }
+
+  /* パチスロっぽいランプ（光るたびに1つずつ進む） */
+  .lamps { display: flex; gap: 7px; justify-content: center; margin: 14px 0 0; height: 10px; }
+  .groove .tracks { margin-top: 6px; }
+  .lamps i { width: 10px; height: 10px; border-radius: 50%; background: #3a3450; transition: background .25s, box-shadow .25s; }
+  .groove.lit .lamps i.on { background: var(--gc); box-shadow: 0 0 8px var(--gc); }
+  .groove.fever .lamps i { background: hsl(calc(var(--i) * 40deg) 85% 62%); box-shadow: 0 0 6px hsl(calc(var(--i) * 40deg) 85% 62%); }
+
+  /* ときどき来る「確定」演出：枠がゆっくり虹色に回る＋文字がふわっと出る */
+  .groove::after { content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 3px; z-index: 2; pointer-events: none;
+                   background: conic-gradient(from var(--rot, 0deg), #ff8fa3, #ffe066, #8ce99a, #74c0fc, #b197fc, #ff8fa3);
+                   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                   -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity .8s; }
+  .groove.fever::after { opacity: .9; animation: rot 3s linear infinite; }
+  /* FEVER中は背景も虹色。色はゆっくり流れるだけで、明滅はさせない */
+  .fx-rainbow { position: absolute; inset: 0; opacity: 0; transition: opacity 1s;
+                background: linear-gradient(120deg, #ff8fa3, #ffe066, #8ce99a, #74c0fc, #b197fc, #ff8fa3, #ffe066);
+                background-size: 300% 300%; animation: rainbow 9s linear infinite; }
+  .groove.fever .fx-rainbow { opacity: .26; }
+  @keyframes rainbow { to { background-position: 300% 0; } }
+  @property --rot { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  @keyframes rot { to { --rot: 360deg; } }
+  .kakutei { height: 22px; margin-top: 4px; text-align: center; font: 18px/22px 'DotGothic16', monospace; pointer-events: none;
+             background: linear-gradient(90deg, #ff8fa3, #ffe066, #8ce99a, #74c0fc, #b197fc); -webkit-background-clip: text; background-clip: text;
+             color: transparent; opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
+  .groove.fever .kakutei { opacity: 1; transform: none; }
+  .btn.fxbtn { font-size: 14px; border-width: 2px; padding: 7px 12px; color: var(--muted); border-color: #3a3450; }
+  .btn.fxbtn[aria-pressed="true"] { color: var(--fg); border-color: var(--gc); }
+  .tempos { display: flex; gap: 6px; margin-bottom: 14px; background: #15121f; padding: 5px; border-radius: 12px; }
+  .tempo { flex: 1; font: inherit; color: var(--muted); background: none; border: none; border-radius: 9px; padding: 8px 4px;
+           cursor: pointer; line-height: 1.2; }
+  .tempo b { display: block; font-family: 'DotGothic16', monospace; font-size: 22px; font-weight: 400; }
+  .tempo span, .tempo em { display: block; font-size: 11px; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tempo em { opacity: .75; }
+  .tempo[aria-selected="true"] { background: var(--tc); color: #1b1030; }
+  .tempo:not([aria-selected="true"]):hover { color: var(--fg); }
+  .tempo:disabled { cursor: wait; }
   .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
   .trk { border-radius: 12px; padding: 12px; border: 3px solid #3a3450; background: #15121f; text-align: left;
          color: var(--fg); font: inherit; cursor: pointer; min-height: 74px; }
@@ -91,13 +149,12 @@
   .trk.on { border-color: #ffe066; background: #2b2410; box-shadow: 0 0 18px #ffe06655; }
   .trk.locked { cursor: not-allowed; opacity: .55; }
   .trk.on .n::after { content: ' ♪'; }
-  .playing .trk.on { animation: bump .5s infinite; }
-  @keyframes bump { 50% { transform: scale(1.04); } }
   .btn { font: inherit; font-weight: 800; border: 3px solid var(--fg); background: none; color: var(--fg);
          padding: 8px 16px; border-radius: 10px; cursor: pointer; }
   .btn.big { background: #ffe066; color: #1b1030; border-color: #ffe066; }
   .btn.cheat { border-style: dashed; border-color: var(--muted); color: var(--muted); font-size: 14px; }
   .btn.cheat:hover { color: #ff4d6d; border-color: #ff4d6d; }
+  .btn.danger { color: #ff4d6d; border-color: #ff4d6d; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .count { color: var(--muted); font-family: 'DotGothic16', monospace; }
   .note { color: var(--muted); font-size: 13px; }
@@ -144,7 +201,8 @@
       <p class="il1" data-i18n="il1"></p>
       <p class="il2" data-i18n="il2"></p>
       <p class="il3" data-i18n="il3"></p>
-      <p class="il4" data-i18n="il4"></p>
+      <p class="il4" data-i18n-html="il4"></p>
+      <p class="sound-note" data-i18n="soundNote"></p>
     </div>
   </section>
 
@@ -160,19 +218,24 @@
       </div>
 
       <div id="gift">
-        <h1 class="boxname" data-i18n="boxName"></h1>
-        <p class="tag" data-i18n="tagline"></p>
+        <h1 class="boxname" data-i18n-html="boxName"></h1>
+        <p class="intent" data-i18n="intent"></p>
+        <p class="tag" data-i18n-html="tagline"></p>
 
         <h2><span data-i18n="apps"></span> <small data-i18n="appsSub"></small></h2>
         <div class="apps" id="apps"></div>
 
         <h2><span data-i18n="groove"></span> <small id="count" class="count"></small></h2>
         <div class="groove" id="groove">
+          <div class="fx" aria-hidden="true"><div class="fx-rainbow"></div><div class="fx-glow"></div><div class="fx-beams"></div></div>
+          <div class="tempos" id="tempos" role="tablist"></div>
           <div class="row">
             <button class="btn big" id="play"></button>
+            <button class="btn fxbtn" id="fxbtn"></button>
             <button class="btn cheat" id="cheat"></button>
           </div>
-          <p class="note" data-i18n="grooveNote"></p>
+          <div class="lamps" id="lamps" aria-hidden="true"></div>
+          <div class="kakutei" id="kakutei" aria-hidden="true"></div>
           <div class="tracks" id="tracks"></div>
         </div>
 
@@ -195,7 +258,7 @@
   </section>
 </main>
 
-<script src="/core/core.js?v=6"></script>
+<script src="/core/core.js?v=7"></script>
 <script>
 const T = {
   en: {
@@ -203,52 +266,56 @@ const T = {
     il1: 'That concludes the professional part.',
     il2: 'Thank you very much for your time.',
     il3: 'And now,',
-    il4: 'as thanks for visiting, please accept some uselessness.',
+    il4: 'as thanks for visiting,<br>please accept this assortment of uselessness.',
+    soundNote: '※ This plays sound',
     giftLabel: 'USELESS',
-    hintClosed: 'Tap to open (no returns)', hintOpen: 'Congratulations. It is useless. Tap again to close.',
-    hintReclosed: 'Closed. The uselessness is resting. Tap to open again.',
-    giftAriaOpen: 'Open the box of uselessness', giftAriaClose: 'Close the box',
-    boxName: 'FUZAKE BOX',
-    tagline: 'A button that does nothing, natto, and the void. Play them to collect sounds, which slowly turn into a groove.',
+    hintClosed: 'Tap to open (no returns)', hintOpen: 'Congratulations. It is an assortment of uselessness. Tap again to close.',
+    hintReclosed: 'The assortment of uselessness has been carefully stored.',
+    giftAriaOpen: 'Open the assortment of uselessness', giftAriaClose: 'Close the assortment',
+    boxName: 'The Useless Corner',
+    intent: 'I made this because I think people are happiest when they have room for useless things.',
+    tagline: 'A button, natto, the void, flowing noodles, rubber stamps and a cat.<br>Play them to collect sounds, which slowly turn into a groove.',
     apps: 'Apps', appsSub: 'none of them mean anything',
     groove: 'Groove Machine', sounds: 'sounds',
-    grooveNote: 'Tap collected sounds to toggle them. Everything is 120 BPM, so it just fits.',
     play: '▶ Play', stop: '■ Stop', loading: '…loading', noSounds: 'No sounds yet. Play the apps (or cheat).',
+    fxOn: '✨ Lights: on', fxOff: '✨ Lights: off', fxTitle: 'Gentle lights synced to the beat (at most 2 pulses per second)', kakutei: '★ FEVER ★',
     cheat: '🔓 Unlock everything', cheated: 'Everything unlocked. Cheater.', allDone: 'Already all unlocked.',
-    locked: '???',
+    locked: '???', lockedHint: 'Dropped somewhere in the games',
     save: 'Save', saveSub: 'for moving devices or lost data',
     saveSummary: 'Show / load a save code',
     saveNote: 'Progress is stored in this browser. Safari on iPhone may delete it if you do not visit for a while, so add this page to your Home Screen or keep a save code somewhere.',
     exp: 'Show code', imp: 'Load this code', rst: 'Erase everything',
     codePh: 'Save code goes here', copied: 'Copy it and keep it somewhere.', loaded: 'Loaded.',
-    confirmReset: 'All records and sounds will be erased. OK?',
-    footer: 'FUZAKE BOX / 2026 / seriously made, not serious',
+    rstConfirm: 'Really erase everything? (tap again)',
+    footer: '© 2026 Yusuke Iwasaki',
   },
   ja: {
     eyebrow: 'Profile', career: 'Career',
     il1: '以上、真面目なご紹介でした。',
     il2: 'お時間をいただき、誠にありがとうございました。',
     il3: 'さて、',
-    il4: 'ご来訪のお礼に、無駄をどうぞ。',
+    il4: 'ご来訪のお礼に、<br>無駄の詰め合わせをどうぞ。',
+    soundNote: '※音がなります',
     giftLabel: '無駄',
-    hintClosed: 'タップして受け取る（返品不可）', hintOpen: 'おめでとうございます。無駄です。もう一度タップで閉じます。',
-    hintReclosed: '閉じました。無駄は休んでいます。タップでまた開きます。',
-    giftAriaOpen: '無駄の箱を開ける', giftAriaClose: '箱を閉じる',
-    boxName: 'ふざけ箱',
-    tagline: '押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまって、だんだんグルーヴになる。',
+    hintClosed: 'タップして受け取る（返品不可）', hintOpen: 'おめでとうございます。無駄の詰め合わせです。もう一度タップで閉じます。',
+    hintReclosed: '無駄の詰め合わせは丁寧に保管されています。',
+    giftAriaOpen: '無駄の詰め合わせを開ける', giftAriaClose: '詰め合わせを閉じる',
+    boxName: '無駄コーナー',
+    intent: '人は、無駄なことができるくらいの余裕があると幸せだと思うので、作っています。',
+    tagline: 'ボタン、納豆、虚無、流しそうめん、ハンコ、猫。<br>遊ぶと音源がたまって、だんだんグルーヴになる。',
     apps: 'アプリ', appsSub: 'どれも意味はない',
     groove: 'グルーヴ機', sounds: '音源',
-    grooveNote: '集めた音源をタップでON/OFF。全部120BPMで勝手に合う。',
     play: '▶ 鳴らす', stop: '■ 止める', loading: '…読み込み中', noSounds: 'まだ音源がない。アプリで遊べ（またはズルしろ）',
+    fxOn: '✨ 演出：ON', fxOff: '✨ 演出：OFF', fxTitle: 'ビートに合わせて控えめに光ります（明滅は毎秒2回まで）', kakutei: '★ FEVER ★',
     cheat: '🔓 全部解放する', cheated: '全部解放しました。ズルです。', allDone: 'もう全部解放済みです。',
-    locked: '？？？',
+    locked: '？？？', lockedHint: 'どこかのゲームに落ちている',
     save: 'セーブ', saveSub: '引っ越し・消えたとき用',
     saveSummary: 'セーブコードを出す / 読み込む',
     saveNote: '進捗はこのブラウザに保存されます。iPhoneのSafariはしばらく開かないと消えることがあるので、ホーム画面に追加するか、たまにコードを控えておくと安心です。',
     exp: 'コードを出す', imp: 'このコードを読み込む', rst: '全部消す',
     codePh: 'ここにセーブコード', copied: 'コピーしてどこかに貼っておいてください。', loaded: '読み込みました。',
-    confirmReset: '全部の記録と音源が消えます。いいですか？',
-    footer: 'ふざけ箱 / 2026 / 真面目に作られた不真面目',
+    rstConfirm: '本当に全部消す？（もう一度押す）',
+    footer: '© 2026 Yusuke Iwasaki',
   },
 };
 const t = FZ.t;
@@ -263,19 +330,40 @@ FZ.langToggle();
   ]);
 
   // ---------- 状態 ----------
+  // テンポごとに音源セットが分かれている（unlocks.json の bpm）。鳴らせるのは常に1セットだけ
+  const TEMPOS = [
+    { bpm: 120, color: '#ffe066' },
+    { bpm: 180, color: '#4cc9f0' },
+    { bpm: 400, color: '#ff4d6d' },
+    { bpm: 1280, color: '#f4a261' },
+  ];
+  const bpmOf = r => r.bpm || 120;
+  let tempo = FZ.stat('top', 'bpm') || 120;
+  if (!TEMPOS.some(x => x.bpm === tempo)) tempo = 120;
   let unlocked = new Set(FZ.unlocked());
   let on = new Set(unlocked);            // 解放済みは最初から全部ON
-  let ctx = null, buffers = {}, gains = {}, sources = [];
+  let ctx = null, master = null, buffers = {}, gains = {}, sources = [];
   let playing = false;
+  let gen = 0;                           // 再生の世代。読み込み中にテンポを変えたら古いほうは鳴らさない
+  let loading = false;                   // 音源を読み込み中（まだ鳴っていないが、鳴らすつもり）
   // 箱：初回は閉じた状態。以降は前回の開閉状態を覚えておく（boxOpen: 1=開, 2=閉じた）
   let boxState = FZ.stat('top', 'boxOpen');   // 0=未開封
 
   const $ = id => document.getElementById(id);
+  const groove = $('groove'), lampsEl = $('lamps');
+  const LAMPS = 9;
+  for (let i = 0; i < LAMPS; i++) { const d = document.createElement('i'); d.style.setProperty('--i', i); lampsEl.appendChild(d); }
+  let fxWanted = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try { const v = localStorage.getItem('fz-fx'); if (v === '0' || v === '1') fxWanted = v === '1'; } catch (e) {}
+  let fxRaf = 0, fxT0 = 0, fxPulse = 0.5, fxLast = -1;
+  const FEVER_ODDS = 1 / 128;   // 光るたびにこの確率で FEVER
+  const FEVER_PULSES = 8;       // FEVER は光る8回ぶん続く
+  let feverLeft = 0;
   const giftEl = $('gift'), box = $('giftbox'), hint = $('gifthint');
 
   // ---------- 描画（言語切り替え時も呼ぶ） ----------
   function renderProfile() {
-    document.title = p.name + (FZ.lang() === 'ja' ? ' | ふざけ箱' : ' | FUZAKE BOX');
+    document.title = p.name;
     $('pname').textContent = t(p.name);
     $('prole').textContent = t(p.role);
     $('psummary').textContent = t(p.summary);
@@ -313,17 +401,39 @@ FZ.langToggle();
       el.appendChild(card);
     }
   }
+  function renderTempos() {
+    const el = $('tempos');
+    el.textContent = '';
+    el.setAttribute('aria-label', 'BPM');
+    for (const tp of TEMPOS) {
+      const set = rules.filter(r => bpmOf(r) === tp.bpm);
+      const got = set.filter(r => unlocked.has(r.id)).length;
+      const b = document.createElement('button');
+      b.className = 'tempo';
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(tp.bpm === tempo));
+      b.style.setProperty('--tc', tp.color);
+      b.innerHTML = '<b></b><span></span><em></em>';
+      b.querySelector('b').textContent = tp.bpm;
+      b.querySelector('span').textContent = 'BPM';
+      b.querySelector('em').textContent = got + '/' + set.length;
+      b.onclick = () => switchTempo(tp.bpm);
+      el.appendChild(b);
+    }
+  }
   function renderTracks() {
     $('count').textContent = unlocked.size + ' / ' + rules.length + ' ' + L.sounds;
+    renderTempos();
     const el = $('tracks');
     el.textContent = '';
     for (const r of rules) {
+      if (bpmOf(r) !== tempo) continue;
       const b = document.createElement('button');
       const has = unlocked.has(r.id);
       b.className = 'trk' + (has ? (on.has(r.id) ? ' on' : '') : ' locked');
       b.innerHTML = '<div class="n"></div><div class="h"></div>';
       b.querySelector('.n').textContent = has ? t(r.name) : L.locked;
-      b.querySelector('.h').textContent = has ? '' : t(r.hint);
+      b.querySelector('.h').textContent = has ? '' : L.lockedHint;
       if (has) b.onclick = () => {
         on.has(r.id) ? on.delete(r.id) : on.add(r.id);
         b.classList.toggle('on', on.has(r.id));
@@ -333,6 +443,8 @@ FZ.langToggle();
     }
     $('play').textContent = playing ? L.stop : L.play;
     $('cheat').textContent = L.cheat;
+    paintFxBtn();
+    $('kakutei').textContent = L.kakutei;
   }
   function renderBox() {
     const isOpen = boxState === 1;
@@ -348,8 +460,23 @@ FZ.langToggle();
     renderProfile(); renderApps(); renderTracks(); renderBox();
   }
 
+  L = T[FZ.lang()];                            // 読み込み中に言語が切り替えられていても合わせる
   renderAll();
   document.body.classList.remove('booting');   // ここで初めて見せる
+
+  // アプリから戻ってきた＆箱が開いている → 「無駄コーナー」の見出しから見せる
+  let fromApp = false;
+  try { fromApp = sessionStorage.getItem('fz-from-app') === '1'; sessionStorage.removeItem('fz-from-app'); } catch (e) {}
+  if (fromApp && boxState === 1) {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    const target = document.querySelector('h1.boxname');
+    target.scrollIntoView({ block: 'start' });
+    // Webフォントが後から読み込まれて上の高さが変わると位置がずれるので、読み込み後にもう一度合わせる（自分で動かしていなければ）
+    let touched = false;
+    const mark = () => { touched = true; };
+    ['wheel', 'touchstart', 'keydown'].forEach(ev => addEventListener(ev, mark, { once: true, passive: true }));
+    if (document.fonts) document.fonts.ready.then(() => { if (!touched) target.scrollIntoView({ block: 'start' }); });
+  }
   FZ.onLang(() => { L = T[FZ.lang()]; renderAll(); });
 
   // ---------- 箱の開け閉め ----------
@@ -357,7 +484,7 @@ FZ.langToggle();
     if (boxState === 1) {
       boxState = 2;
       FZ.set('top', 'boxOpen', 2);
-      if (playing) stop();
+      stop();
       giftEl.classList.add('shut');
       box.classList.remove('open');
       setTimeout(renderBox, 350);       // フェードアウトしてから隠す
@@ -374,27 +501,41 @@ FZ.langToggle();
   };
 
   // ---------- グルーヴ機 ----------
-  $('play').onclick = async () => {
-    if (playing) { stop(); return; }
-    if (!unlocked.size) { $('play').textContent = L.noSounds; return; }
-    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+  $('play').onclick = () => { (playing || loading) ? stop() : start(); };
+
+  async function start() {
+    stop();                                 // 念のため：別テンポが鳴っていたら必ず止める
+    const my = ++gen;
+    loading = true;
+    const list = rules.filter(r => bpmOf(r) === tempo && unlocked.has(r.id));
+    if (!list.length) { loading = false; $('play').textContent = L.noSounds; return; }
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // 重ねても割れないよう、出口にリミッター代わりのコンプを1つ
+      master = ctx.createDynamicsCompressor();
+      master.threshold.value = -10; master.knee.value = 6; master.ratio.value = 12;
+      master.attack.value = 0.003; master.release.value = 0.15;
+      master.connect(ctx.destination);
+    }
     await ctx.resume();
     $('play').textContent = L.loading;
-    const list = rules.filter(r => unlocked.has(r.id));
     await Promise.all(list.map(async r => {
       if (!buffers[r.id]) {
-        const ab = await fetch(r.file).then(x => x.arrayBuffer());
+        const ab = await fetch(r.file + '?v=' + FZ.V).then(x => x.arrayBuffer());
         buffers[r.id] = await ctx.decodeAudioData(ab);
       }
     }));
+    if (my !== gen) return;                 // 読み込み中に止められた／テンポが変わった
+    loading = false;
     const t0 = ctx.currentTime + 0.1;
+    fxStart(t0);
     for (const r of list) {
       const src = ctx.createBufferSource();
       src.buffer = buffers[r.id];
       src.loop = true;
       const g = ctx.createGain();
       g.gain.value = on.has(r.id) ? 1 : 0;
-      src.connect(g).connect(ctx.destination);
+      src.connect(g).connect(master);
       src.start(t0);
       gains[r.id] = g;
       sources.push(src);
@@ -404,24 +545,94 @@ FZ.langToggle();
     $('play').textContent = L.stop;
   };
   function stop() {
-    sources.forEach(s => s.stop());
+    gen++;                                  // 読み込み中の start() も無効にする
+    loading = false;
+    sources.forEach(s => { try { s.stop(); } catch (e) {} });
     sources = []; gains = {};
     playing = false;
     $('groove').classList.remove('playing');
+    fxStop();
     $('play').textContent = L.play;
+  }
+  // テンポ切り替え：鳴っていたら止めて、新しいテンポで鳴らし直す（2つのテンポが同時に鳴ることはない）
+  function switchTempo(bpm) {
+    if (bpm === tempo) return;
+    const was = playing || loading;         // 読み込み中に切り替えても「鳴らすつもり」は引き継ぐ
+    stop();
+    tempo = bpm;
+    FZ.set('top', 'bpm', bpm);
+    renderTracks();
+    if (was) start();
+  }
+
+  // ---------- 再生中の演出（BPMに合わせて光る） ----------
+  function paintFxBtn() {
+    const b = $('fxbtn');
+    b.textContent = fxWanted ? L.fxOn : L.fxOff;
+    b.title = L.fxTitle;
+    b.setAttribute('aria-pressed', String(fxWanted));
+  }
+  $('fxbtn').onclick = () => {
+    fxWanted = !fxWanted;
+    try { localStorage.setItem('fz-fx', fxWanted ? '1' : '0'); } catch (e) {}
+    paintFxBtn();
+    if (playing && fxWanted) fxStart(fxT0); else fxStop();
+  };
+  // 光る間隔：1拍ずつ。ただし毎秒2回を超えるテンポは2拍・4拍…にまとめる
+  function pulseSeconds(bpm) {
+    let beats = 1;
+    while (bpm / 60 / beats > 2.05) beats *= 2;
+    return 60 / bpm * beats;
+  }
+  function fxStart(t0) {
+    fxT0 = t0;
+    const tp = TEMPOS.find(x => x.bpm === tempo);
+    groove.style.setProperty('--gc', tp ? tp.color : '#ffe066');
+    if (!fxWanted) return;
+    fxPulse = pulseSeconds(tempo);
+    fxLast = -1;
+    feverLeft = 0;
+    cancelAnimationFrame(fxRaf);
+    groove.classList.add('lit');
+    fxRaf = requestAnimationFrame(fxFrame);
+  }
+  function fxStop() {
+    cancelAnimationFrame(fxRaf);
+    fxRaf = 0;
+    groove.classList.remove('lit', 'fever');
+    groove.style.setProperty('--pulse', 0);
+    lampsEl.querySelectorAll('i').forEach(i => i.classList.remove('on'));
+  }
+  function fxFrame() {
+    // 実際に耳に届く時刻に合わせる（出力の遅れぶん引く）
+    const now = ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0);
+    let p = 0;
+    if (now >= fxT0) {
+      const ph = (now - fxT0) / fxPulse, n = Math.floor(ph), f = ph - n;
+      p = f < 0.08 ? f / 0.08 : Math.pow(1 - (f - 0.08) / 0.92, 2);   // ふわっと立ち上がって、ゆっくり消える
+      if (n !== fxLast) {
+        fxLast = n;
+        lampsEl.querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i === n % LAMPS || i === (n + LAMPS - 1) % LAMPS));
+        if (feverLeft > 0) feverLeft--;
+        else if (Math.random() < FEVER_ODDS) feverLeft = FEVER_PULSES;
+        groove.classList.toggle('fever', feverLeft > 0);
+      }
+    }
+    groove.style.setProperty('--pulse', p.toFixed(3));
+    fxRaf = requestAnimationFrame(fxFrame);
   }
 
   // ---------- 全部解放（ズル） ----------
   $('cheat').onclick = async () => {
     if (unlocked.size === rules.length) { $('cheat').textContent = L.allDone; return; }
-    const was = playing;
-    if (was) stop();
+    const was = playing || loading;
+    stop();
     await FZ.unlockAll();
     unlocked = new Set(FZ.unlocked());
     on = new Set(unlocked);
     renderTracks();
     $('cheat').textContent = L.cheated;
-    if (was) $('play').click();
+    if (was) start();
   };
 
   // ---------- セーブコード ----------
@@ -431,7 +642,21 @@ FZ.langToggle();
     try { FZ.importCode(code.value); msg.textContent = L.loaded; setTimeout(() => location.reload(), 600); }
     catch (e) { msg.textContent = e.message; }
   };
-  $('rst').onclick = () => { if (confirm(L.confirmReset)) { FZ.reset(); location.reload(); } };
+  // confirm() はアプリ内ブラウザなどで黙って false を返すことがあるので使わない。4秒以内にもう一度押したら消す
+  let rstTimer = null;
+  function disarmReset() { clearTimeout(rstTimer); rstTimer = null; $('rst').textContent = L.rst; $('rst').classList.remove('danger'); }
+  $('rst').onclick = () => {
+    if (!rstTimer) {
+      $('rst').textContent = L.rstConfirm;
+      $('rst').classList.add('danger');
+      rstTimer = setTimeout(disarmReset, 4000);
+      return;
+    }
+    disarmReset();
+    stop();
+    FZ.reset();
+    location.reload();
+  };
 })();
 </script>
 </body>

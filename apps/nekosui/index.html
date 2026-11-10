@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Cat Sniffing | Yusuke Iwasaki</title>
+<link rel="stylesheet" href="/core/core.css?v=7">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden;
+         transition: background .2s; }
+  body.scratched { background: #5a0f1c; }
+  #sec { font: clamp(48px, 13vw, 80px) 'DotGothic16', monospace; color: #f4a261; min-height: 1.2em; }
+  #cat { font-size: min(44vw, 200px); line-height: 1.1; cursor: pointer; touch-action: none; border: none; background: none;
+         padding: 0; transition: transform .1s; -webkit-touch-callout: none; }
+  #cat.sniffing { transform: scale(1.12); animation: inhale 1.2s ease-in-out infinite; }
+  @keyframes inhale { 50% { transform: scale(1.18) rotate(-2deg); } }
+  #claws { position: fixed; inset: 0; pointer-events: none; opacity: 0;
+           background: repeating-linear-gradient(115deg, transparent 0 46%, #ff4d6d 46% 48%, transparent 48% 54%); }
+  body.scratched #claws { animation: claw .6s ease-out; }
+  @keyframes claw { 0% { opacity: 1; transform: translate(-40px, -40px); } 100% { opacity: 0; transform: translate(20px, 20px); } }
+  #say { font-weight: 800; font-size: 18px; min-height: 2.6em; padding: 0 20px; margin-top: 10px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div id="claws"></div>
+<div>
+  <div id="sec"></div>
+  <button id="cat" aria-label="cat">😺</button>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=7"></script>
+<script>
+const APP = 'nekosui';
+const T = {
+  en: {
+    back: '← Back', title: 'Cat Sniffing',
+    intro: 'Press and hold the cat to sniff it. Let go before it gets angry. It will get angry.',
+    smells: ['Smells like sunshine.', 'Smells like popcorn.', 'Smells like dust.', 'Smells like a cat (obviously).',
+             'Smells like the sofa you are not allowed on.', 'Smells like Tuesday.', 'Smells faintly of fish.'],
+    kept: s => s.toFixed(1) + ' seconds of cat. Safely inhaled.',
+    tooShort: 'That was barely a sniff.',
+    scratched: 'HSSSS! Scratched. That sniff does not count.',
+    rec: (t, b, sc) => 'Total ' + t.toFixed(1) + 's / Best ' + b.toFixed(1) + 's / Scratched ' + sc,
+  },
+  ja: {
+    back: '← 戻る', title: '猫吸い',
+    intro: '猫を長押しして吸ってください。怒られる前に離してください。いずれ怒られます。',
+    smells: ['お日さまの匂いがします。', 'ポップコーンの匂いがします。', 'ほこりの匂いがします。', '猫の匂いがします（当然）。',
+             '乗ってはいけないソファの匂いがします。', '火曜日の匂いがします。', 'うっすら魚の匂いがします。'],
+    kept: s => s.toFixed(1) + '秒ぶんの猫を、無事に吸いました。',
+    tooShort: 'ほぼ吸えていません。',
+    scratched: 'シャーッ！ 引っかかれました。今の吸引はなかったことになります。',
+    rec: (t, b, sc) => '累計 ' + t.toFixed(1) + '秒 / 最長 ' + b.toFixed(1) + '秒 / 引っかかれ ' + sc + '回',
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const $ = id => document.getElementById(id);
+const cat = $('cat'), sec = $('sec'), say = $('say'), rec = $('rec');
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+let sniffing = false, t0 = 0, patience = 0, tick = null, lastSmell = 0, cooldown = false;
+
+// ---- 音：吸う音（ノイズ）と、シャーッ ----
+let ctx = null, breath = null;
+function audio() {
+  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+function noiseBuffer(c, sec) {
+  const n = Math.floor(c.sampleRate * sec), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+function breathOn() {
+  try {
+    const c = audio(), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = noiseBuffer(c, 1); s.loop = true;
+    f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 0.8;
+    g.gain.setValueAtTime(0, c.currentTime);
+    g.gain.linearRampToValueAtTime(0.12, c.currentTime + 0.4);
+    s.connect(f).connect(g).connect(c.destination);
+    s.start();
+    breath = { s, g };
+  } catch (e) {}
+}
+function breathOff() {
+  if (!breath) return;
+  try { breath.g.gain.setTargetAtTime(0, ctx.currentTime, 0.05); breath.s.stop(ctx.currentTime + 0.3); } catch (e) {}
+  breath = null;
+}
+function hiss() {
+  try {
+    const c = audio(), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = noiseBuffer(c, 0.6);
+    f.type = 'highpass'; f.frequency.value = 2500;
+    g.gain.setValueAtTime(0.4, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.6);
+    s.connect(f).connect(g).connect(c.destination);
+    s.start();
+  } catch (e) {}
+}
+
+function show() {
+  rec.textContent = L.rec(FZ.stat(APP, 'total'), FZ.stat(APP, 'best'), FZ.stat(APP, 'scratches'));
+}
+
+function begin(e) {
+  e.preventDefault();
+  if (sniffing || cooldown) return;
+  sniffing = true;
+  t0 = performance.now();
+  patience = 2.5 + Math.random() * 9.5;     // この猫が我慢できる秒数（毎回ちがう）
+  cat.classList.add('sniffing');
+  say.textContent = '';
+  lastSmell = 0;
+  breathOn();
+  tick = setInterval(update, 50);
+}
+function update() {
+  const s = (performance.now() - t0) / 1000;
+  sec.textContent = s.toFixed(1);
+  const p = s / patience;
+  cat.textContent = p < 0.55 ? '😺' : p < 0.85 ? '😼' : '😾';
+  if (s - lastSmell > 1.6) { lastSmell = s; say.textContent = pick(L.smells); }
+  if (p >= 1) scratch();
+}
+function end() {
+  if (!sniffing) return;
+  clearInterval(tick);
+  sniffing = false;
+  breathOff();
+  cat.classList.remove('sniffing');
+  cat.textContent = '😺';
+  const s = (performance.now() - t0) / 1000;
+  if (s < 0.5) { say.textContent = L.tooShort; sec.textContent = ''; return; }
+  const v = Math.round(s * 10) / 10;
+  FZ.add(APP, 'total', v);
+  FZ.max(APP, 'best', v);
+  say.textContent = L.kept(v);
+  show();
+}
+function scratch() {
+  clearInterval(tick);
+  sniffing = false;
+  breathOff();
+  hiss();
+  FZ.add(APP, 'scratches', 1);
+  cat.classList.remove('sniffing');
+  cat.textContent = '🙀';
+  sec.textContent = '0.0';
+  say.textContent = L.scratched;
+  document.body.classList.remove('scratched'); void document.body.offsetWidth; document.body.classList.add('scratched');
+  cooldown = true;
+  setTimeout(() => { cooldown = false; cat.textContent = '😺'; document.body.classList.remove('scratched'); }, 1200);
+  show();
+}
+
+cat.addEventListener('pointerdown', begin);
+['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, end));
+cat.addEventListener('pointerleave', end);
+cat.addEventListener('contextmenu', e => e.preventDefault());
+
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

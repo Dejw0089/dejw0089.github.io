@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Useless Button — FUZAKE BOX</title>
-<link rel="stylesheet" href="/core/core.css?v=6">
+<title>Useless Button | Yusuke Iwasaki</title>
+<link rel="stylesheet" href="/core/core.css?v=7">
 <style>
   body { display: grid; place-items: center; overflow: hidden; user-select: none; -webkit-user-select: none; }
   .wrap { text-align: center; }
@@ -28,12 +28,12 @@
   <div id="say" data-i18n="intro"></div>
   <div id="n"></div>
 </div>
-<script src="/core/core.js?v=6"></script>
+<script src="/core/core.js?v=7"></script>
 <script>
 const APP = 'muda-button';
 const T = {
   en: {
-    back: '← FUZAKE BOX', title: 'Useless Button', press: 'PRESS', intro: 'Nothing happens when you press it.',
+    back: '← Back', title: 'Useless Button', press: 'PRESS', intro: 'Nothing happens when you press it.',
     total: n => 'Total: ' + n + ' presses',
     lines: ['Nothing happened.', 'You pressed it.', 'Yes.', 'Nothing in particular.', 'That was a good press.',
             'Recorded. Nobody will look at it.', 'The button feels nothing.', 'Still pressing?',
@@ -43,7 +43,7 @@ const T = {
                   500: '500. The button remembers you now.', 1000: '1000. You are family now.' },
   },
   ja: {
-    back: '← ふざけ箱', title: '無駄ボタン', press: '押す', intro: '押しても何も起きません。',
+    back: '← 戻る', title: '無駄ボタン', press: '押す', intro: '押しても何も起きません。',
     total: n => '累計 ' + n + ' 回',
     lines: ['何も起きませんでした。', '押しましたね。', 'はい。', '特にないです。', '今のは良い押しでした。',
             '記録しました。誰も見ませんが。', 'ボタンは何も感じていません。', 'まだ押すんですか。',
@@ -54,7 +54,7 @@ const T = {
   },
 };
 let L = FZ.apply(T);
-function setTitle() { document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX'); }
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
 setTitle();
 FZ.langToggle(document.getElementById('right'));
 

@@ -1,0 +1,20 @@
+{
+  "name": "yusuke-iw.github.io",
+  "private": true,
+  "description": "Profile site of Yusuke Iwasaki — with a little twist.",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ],
+    "testTimeout": 20000
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdom": "^24.1.3"
+  }
+}

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Somen Slide | Yusuke Iwasaki</title>
+<link rel="stylesheet" href="/core/core.css?v=7">
+<style>
+  body { overflow: hidden; user-select: none; -webkit-user-select: none; display: grid; place-items: center; text-align: center; }
+  #hud { font-family: 'DotGothic16', monospace; display: flex; gap: 28px; justify-content: center; align-items: baseline; }
+  #score { font-size: 46px; color: #fff6e0; }
+  #time { font-size: 24px; color: var(--muted); }
+  #field { position: relative; width: 100vw; height: 170px; margin: 18px 0; touch-action: none; }
+  .chute { position: absolute; left: -20px; right: -20px; top: 50px; height: 76px; border-radius: 40px;
+           background: linear-gradient(#7fb069, #4f7d3a 40%, #2f5223); box-shadow: inset 0 10px 0 #a8d08d55, 0 10px 20px #0007;
+           transform: rotate(-2deg); }
+  .chute::after { content: ''; position: absolute; left: 0; right: 0; top: 18px; height: 34px; border-radius: 20px;
+                  background: repeating-linear-gradient(100deg, #9fd8ff66 0 14px, #d8f1ff99 14px 22px, #9fd8ff55 22px 40px);
+                  background-size: 80px 100%; animation: flow .6s linear infinite; }
+  @keyframes flow { to { background-position: 80px 0; } }
+  .item { position: absolute; top: 0; width: 64px; height: 64px; margin-left: -32px; display: grid; place-items: center;
+          font-size: 40px; cursor: pointer; transition: transform .25s, opacity .25s; }
+  .item.got { transform: translateY(-90px) scale(.6); opacity: 0; }
+  .item.bad { transform: translateY(40px) rotate(160deg); opacity: 0; }
+  .somen { width: 46px; height: 22px; border-radius: 12px; position: relative;
+           background: repeating-linear-gradient(0deg, #fffaf0 0 3px, #e9e2d0 3px 4px); box-shadow: 0 2px 4px #0004; }
+  .somen.gold { background: repeating-linear-gradient(0deg, #ffe066 0 3px, #d4a017 3px 4px); box-shadow: 0 0 16px #ffe066; }
+  .pop { position: absolute; font: 22px 'DotGothic16', monospace; color: #ffe066; pointer-events: none; animation: up .7s forwards; }
+  .pop.minus { color: #ff4d6d; }
+  @keyframes up { to { transform: translateY(-50px); opacity: 0; } }
+  #say { font-weight: 800; font-size: 18px; min-height: 2.6em; padding: 0 20px; }
+  #go { margin-top: 6px; font: 800 22px 'M PLUS Rounded 1c', sans-serif; padding: 12px 34px; background: #7fb069; color: #12101a;
+        border: none; border-radius: 999px; cursor: pointer; }
+  #go[hidden] { display: none; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; margin-top: 12px; }
+  @media (max-height: 640px) {
+    #score { font-size: 34px; }
+    #field { height: 140px; margin: 6px 0; }
+    .chute { top: 40px; }
+    #say { font-size: 15px; }
+    #go { padding: 9px 28px; font-size: 18px; }
+    #rec { margin-top: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div id="hud"><div id="score">0</div><div id="time">30.0</div></div>
+  <div id="field"><div class="chute"></div></div>
+  <div id="say" data-i18n="intro"></div>
+  <button id="go" data-i18n="go"></button>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=7"></script>
+<script>
+const APP = 'somen';
+const ROUND = 30;
+// そうめん以外に流れてくるもの（取ると減点）
+const JUNK = [
+  { e: '🩴', en: 'That is a slipper. Whose is it?', ja: 'スリッパです。誰のですか。' },
+  { e: '🧦', en: 'A sock. Only the left one.', ja: '靴下です。左だけです。' },
+  { e: '🐟', en: 'A goldfish. Please let it go.', ja: '金魚です。逃がしてあげてください。' },
+  { e: '📱', en: 'A phone. Its owner is crying upstream.', ja: 'スマホです。上流で持ち主が泣いています。' },
+  { e: '🧮', en: 'An abacus. Why.', ja: 'そろばんです。なぜ。' },
+  { e: '🪥', en: 'A toothbrush. Used.', ja: '歯ブラシです。使用済みです。' },
+  { e: '👴', en: 'An old man. He looks very relaxed.', ja: 'おじさんです。気持ちよさそうに流れています。' },
+  { e: '📄', en: 'A request for approval. It belongs in Stamp Rush.', ja: '稟議書です。ハンコ連打へどうぞ。' },
+  { e: '🦆', en: 'A duck. It is also eating somen.', ja: 'カモです。カモもそうめんを食べています。' },
+  { e: '🍉', en: 'A watermelon. Wrong season, wrong chute.', ja: 'スイカです。季節は合っていますが、竹が違います。' },
+];
+const T = {
+  en: {
+    back: '← Back', title: 'Somen Slide', go: 'Start the water', again: 'Again',
+    intro: 'Somen noodles flow down the bamboo. Tap only the somen. Other things also flow. Many other things.',
+    gold: 'Golden somen! (+5)', got: ['Slurp.', 'Somen.', 'Good somen.', 'Chilled.', 'Into the tsuyu.'],
+    rec: (s, b) => 'Somen eaten ' + s + ' / Best ' + b,
+    result: (s, miss) => s + ' somen. ' + miss + ' somen flowed away into the sea. ' +
+      (s >= 40 ? 'A summer master.' : s >= 15 ? 'A respectable summer.' : s > 0 ? 'Summer is short.' : 'You ate nothing but slippers.'),
+  },
+  ja: {
+    back: '← 戻る', title: '流しそうめん', go: '水を流す', again: 'もう一回',
+    intro: '竹をそうめんが流れてきます。そうめんだけタップしてください。そうめん以外も流れてきます。いろいろ流れてきます。',
+    gold: '金のそうめん！（+5）', got: ['ずるっ。', 'そうめん。', 'いいそうめん。', '冷えてます。', 'めんつゆへ。'],
+    rec: (s, b) => '食べたそうめん ' + s + ' / 最高 ' + b,
+    result: (s, miss) => s + '本。' + miss + '本のそうめんが海へ旅立ちました。' +
+      (s >= 40 ? '夏の達人です。' : s >= 15 ? 'ちゃんとした夏です。' : s > 0 ? '夏は短い。' : 'スリッパしか食べていません。'),
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const $ = id => document.getElementById(id);
+const field = $('field'), scoreEl = $('score'), timeEl = $('time'), say = $('say'), go = $('go'), rec = $('rec');
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+let running = false, score = 0, missed = 0, t0 = 0, last = 0, nextSpawn = 0, items = [];
+
+let ctx = null;
+function blip(good) {
+  try {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = good ? 'triangle' : 'sawtooth';
+    o.frequency.setValueAtTime(good ? 520 : 160, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(good ? 1100 : 70, ctx.currentTime + 0.12);
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    o.connect(g).connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + 0.16);
+  } catch (e) {}
+}
+
+function pop(x, y, text, minus) {
+  const p = document.createElement('div');
+  p.className = 'pop' + (minus ? ' minus' : '');
+  p.textContent = text;
+  p.style.left = x + 'px'; p.style.top = y + 'px';
+  field.appendChild(p);
+  setTimeout(() => p.remove(), 700);
+}
+
+function spawn() {
+  const r = Math.random();
+  const kind = r < 0.04 ? 'gold' : r < 0.62 ? 'somen' : 'junk';
+  const el = document.createElement('div');
+  el.className = 'item';
+  const chute = field.querySelector(".chute");
+  const it = { el, kind, x: -40, y: chute.offsetTop + 2 + Math.random() * 18, speed: 150 + Math.random() * 60 + (performance.now() - t0) / 1000 * 6, dead: false };
+  if (kind === 'junk') { it.junk = pick(JUNK); el.textContent = it.junk.e; }
+  else el.innerHTML = '<div class="somen' + (kind === 'gold' ? ' gold' : '') + '"></div>';
+  el.style.top = it.y + 'px';
+  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); grab(it); });
+  field.appendChild(el);
+  items.push(it);
+}
+
+function grab(it) {
+  if (!running || it.dead) return;
+  it.dead = true;
+  if (it.kind === 'junk') {
+    score = Math.max(0, score - 1);
+    it.el.classList.add('bad');
+    say.textContent = it.junk[FZ.lang()] || it.junk.en;
+    pop(it.x, it.y - 10, '-1', true);
+    blip(false);
+  } else {
+    const pts = it.kind === 'gold' ? 5 : 1;
+    score += pts;
+    FZ.add(APP, 'somen', pts);
+    it.el.classList.add('got');
+    say.textContent = it.kind === 'gold' ? L.gold : pick(L.got);
+    pop(it.x, it.y - 10, '+' + pts);
+    blip(true);
+  }
+  scoreEl.textContent = score;
+  show();
+  setTimeout(() => it.el.remove(), 260);
+}
+
+function loop() {
+  const now = performance.now();   // rAF の引数ではなく、開始時刻と同じ時計で測る
+  if (!running) return;
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  const el = (now - t0) / 1000;
+  timeEl.textContent = Math.max(0, ROUND - el).toFixed(1);
+  if (now >= nextSpawn) { spawn(); nextSpawn = now + Math.max(280, 750 - el * 14) + Math.random() * 250; }
+  const w = field.clientWidth;
+  for (const it of items) {
+    if (it.dead) continue;
+    it.x += it.speed * dt;
+    it.y += Math.sin((now / 120) + it.x / 40) * 0.3;   // 水に揺られる
+    it.el.style.left = it.x + 'px';
+    it.el.style.top = it.y + 'px';
+    if (it.x > w + 40) { it.dead = true; it.el.remove(); if (it.kind !== 'junk') missed++; }
+  }
+  items = items.filter(i => !i.dead);
+  if (el >= ROUND) return finish();
+  requestAnimationFrame(loop);
+}
+
+function start() {
+  items.forEach(i => i.el.remove());
+  items = []; score = 0; missed = 0;
+  scoreEl.textContent = '0';
+  say.textContent = '';
+  go.hidden = true;
+  running = true;
+  t0 = last = performance.now();
+  nextSpawn = t0 + 200;
+  requestAnimationFrame(loop);
+}
+function finish() {
+  running = false;
+  timeEl.textContent = '0.0';
+  FZ.max(APP, 'best', score);
+  say.textContent = L.result(score, missed);
+  go.textContent = L.again;
+  go.hidden = false;
+  show();
+}
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'somen'), FZ.stat(APP, 'best')); }
+
+go.onclick = start;
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); if (!go.hidden) go.textContent = running ? L.go : (score || missed ? L.again : L.go); });
+</script>
+</body>
+</html>

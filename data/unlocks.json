@@ -1,20 +1,51 @@
-[
-  { "id": "kick", "file": "/sounds/kick.wav", "app": "muda-button", "stat": "presses", "gte": 10,
-    "name": { "en": "Void Kick", "ja": "虚無キック" },
-    "hint": { "en": "Press the Useless Button 10 times", "ja": "無駄ボタンを10回押す" } },
-  { "id": "hat", "file": "/sounds/hat.wav", "app": "muda-button", "stat": "presses", "gte": 100,
-    "name": { "en": "Screaming Button Hat", "ja": "ボタンの悲鳴ハット" },
-    "hint": { "en": "Press the Useless Button 100 times", "ja": "無駄ボタンを100回押す" } },
-  { "id": "bass", "file": "/sounds/bass.wav", "app": "natto", "stat": "rotations", "gte": 20,
-    "name": { "en": "Sticky Bass", "ja": "ねばねばベース" },
-    "hint": { "en": "Stir the natto 20 times", "ja": "納豆を20回まぜる" } },
-  { "id": "lead", "file": "/sounds/lead.wav", "app": "natto", "stat": "rotations", "gte": 300,
-    "name": { "en": "Natto Lead", "ja": "納豆リード" },
-    "hint": { "en": "Stir the natto 300 times (gourmet level)", "ja": "納豆を300回まぜる（北大路魯山人ライン）" } },
-  { "id": "pad", "file": "/sounds/pad.wav", "app": "kyomu", "stat": "best", "gte": 30,
-    "name": { "en": "Void Pad", "ja": "虚無パッド" },
-    "hint": { "en": "Do nothing for 30 seconds on the Void Timer", "ja": "虚無タイマーで30秒なにもしない" } },
-  { "id": "boing", "file": "/sounds/boing.wav", "app": "kyomu", "stat": "total", "gte": 300,
-    "name": { "en": "Boing", "ja": "ボヨヨン" },
-    "hint": { "en": "Collect 300 seconds of void in total", "ja": "虚無を合計300秒ためる" } }
-]
+{
+  "sounds": [
+    { "id": "kick",       "bpm": 120,  "file": "/sounds/kick.wav",         "name": { "en": "Square Morning",          "ja": "四角い朝" } },
+    { "id": "hat",        "bpm": 120,  "file": "/sounds/hat.wav",          "name": { "en": "Lost Receipt",            "ja": "なくした領収書" } },
+    { "id": "bass",       "bpm": 120,  "file": "/sounds/bass.wav",         "name": { "en": "Blurry Wednesday",        "ja": "にじむ水曜" } },
+    { "id": "lead",       "bpm": 120,  "file": "/sounds/lead.wav",         "name": { "en": "Lost Pigeon",             "ja": "迷子の鳩" } },
+    { "id": "pad",        "bpm": 120,  "file": "/sounds/pad.wav",          "name": { "en": "Afternoon by the Window", "ja": "窓際の午後" } },
+    { "id": "boing",      "bpm": 120,  "file": "/sounds/boing.wav",        "name": { "en": "Bouncing Manager",        "ja": "跳ねる係長" } },
+
+    { "id": "dnb-break",  "bpm": 180,  "file": "/sounds/180/break.wav",    "name": { "en": "Last Train",              "ja": "終電" } },
+    { "id": "dnb-reese",  "bpm": 180,  "file": "/sounds/180/reese.wav",    "name": { "en": "Midnight Steam",          "ja": "深夜の湯気" } },
+    { "id": "dnb-atmos",  "bpm": 180,  "file": "/sounds/180/atmos.wav",    "name": { "en": "Downstream Fog",          "ja": "下流の霧" } },
+    { "id": "dnb-vox",    "bpm": 180,  "file": "/sounds/180/vox.wav",      "name": { "en": "Almost Human",            "ja": "ほぼ人間" } },
+
+    { "id": "sc-kick",    "bpm": 400,  "file": "/sounds/400/kick.wav",     "name": { "en": "Same Day",                "ja": "即日" } },
+    { "id": "sc-snare",   "bpm": 400,  "file": "/sounds/400/snare.wav",    "name": { "en": "Sent Back",               "ja": "差し戻し" } },
+    { "id": "sc-hoover",  "bpm": 400,  "file": "/sounds/400/hoover.wav",   "name": { "en": "The Vortex",              "ja": "渦" } },
+    { "id": "sc-screech", "bpm": 400,  "file": "/sounds/400/screech.wav",  "name": { "en": "Final Notice",            "ja": "最終通告" } },
+
+    { "id": "xt-kick",    "bpm": 1280, "file": "/sounds/1280/kick.wav",    "name": { "en": "Heartbeat",               "ja": "心拍" } },
+    { "id": "xt-chip",    "bpm": 1280, "file": "/sounds/1280/chip.wav",    "name": { "en": "Sparkle",                 "ja": "ぴかぴか" } },
+    { "id": "xt-arp",     "bpm": 1280, "file": "/sounds/1280/arp.wav",     "name": { "en": "Round and Round",         "ja": "ぐるぐる" } },
+    { "id": "xt-noise",   "bpm": 1280, "file": "/sounds/1280/noise.wav",   "name": { "en": "Grainy",                  "ja": "ざらざら" } }
+  ],
+
+  "drops": [
+    { "id": "muda-1",    "app": "muda-button", "stat": "presses",   "gte": 10, "label": { "en": "Press 10 times", "ja": "10回押す" } },
+    { "id": "muda-2",    "app": "muda-button", "stat": "presses",   "gte": 100, "label": { "en": "Press 100 times", "ja": "100回押す" } },
+    { "id": "muda-3",    "app": "muda-button", "stat": "presses",   "gte": 500, "label": { "en": "Press 500 times", "ja": "500回押す" } },
+
+    { "id": "natto-1",   "app": "natto",       "stat": "rotations", "gte": 20, "label": { "en": "Stir 20 times", "ja": "20回まぜる" } },
+    { "id": "natto-2",   "app": "natto",       "stat": "rotations", "gte": 100, "label": { "en": "Stir 100 times", "ja": "100回まぜる" } },
+    { "id": "natto-3",   "app": "natto",       "stat": "rotations", "gte": 300, "label": { "en": "Stir 300 times", "ja": "300回まぜる" } },
+
+    { "id": "kyomu-1",   "app": "kyomu",       "stat": "best",      "gte": 15, "label": { "en": "Void for 15s", "ja": "15秒なにもしない" } },
+    { "id": "kyomu-2",   "app": "kyomu",       "stat": "best",      "gte": 30, "label": { "en": "Void for 30s", "ja": "30秒なにもしない" } },
+    { "id": "kyomu-3",   "app": "kyomu",       "stat": "total",     "gte": 300, "label": { "en": "300s of void in total", "ja": "合計300秒" } },
+
+    { "id": "somen-1",   "app": "somen",       "stat": "somen",     "gte": 20, "label": { "en": "Eat 20 somen in total", "ja": "合計20本食べる" } },
+    { "id": "somen-2",   "app": "somen",       "stat": "best",      "gte": 15, "label": { "en": "Score 15 in one round", "ja": "1回で15点" } },
+    { "id": "somen-3",   "app": "somen",       "stat": "somen",     "gte": 200, "label": { "en": "Eat 200 somen in total", "ja": "合計200本食べる" } },
+
+    { "id": "hanko-1",   "app": "hanko",       "stat": "stamps",    "gte": 50, "label": { "en": "50 stamps in total", "ja": "合計50回押す" } },
+    { "id": "hanko-2",   "app": "hanko",       "stat": "best",      "gte": 25, "label": { "en": "25 stamps in 10s", "ja": "10秒で25回" } },
+    { "id": "hanko-3",   "app": "hanko",       "stat": "stamps",    "gte": 500, "label": { "en": "500 stamps in total", "ja": "合計500回押す" } },
+
+    { "id": "nekosui-1", "app": "nekosui",     "stat": "total",     "gte": 20, "label": { "en": "Sniff 20s in total", "ja": "合計20秒吸う" } },
+    { "id": "nekosui-2", "app": "nekosui",     "stat": "best",      "gte": 6, "label": { "en": "Sniff 6s in one breath", "ja": "一息で6秒吸う" } },
+    { "id": "nekosui-3", "app": "nekosui",     "stat": "total",     "gte": 200, "label": { "en": "Sniff 200s in total", "ja": "合計200秒吸う" } }
+  ]
+}
