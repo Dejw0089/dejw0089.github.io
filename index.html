@@ -367,7 +367,8 @@ FZ.langToggle();
       FZ.add('top', 'gifts', 1);
       giftEl.hidden = false;
       giftEl.classList.add('shut');
-      requestAnimationFrame(() => requestAnimationFrame(renderBox));   // 一拍おいてフェードイン
+      void giftEl.offsetHeight;          // 表示を確定させてからフェードイン
+      renderBox();
       setTimeout(() => giftEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 450);
     }
   };
