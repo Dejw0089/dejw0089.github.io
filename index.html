@@ -47,10 +47,67 @@
              border-radius: 8px; padding: 8px; font-family: monospace; font-size: 12px; }
   .note { color: var(--muted); font-size: 13px; }
   footer { color: var(--muted); font-size: 12px; margin-top: 40px; text-align: center; }
+
+  /* 自己紹介 */
+  .hero { padding: 40px 0 8px; }
+  .who { font-size: clamp(36px, 8vw, 60px); line-height: 1.05; color: #ffe066; text-shadow: 4px 4px 0 var(--accent); }
+  .role { font-weight: 800; font-size: 18px; margin-top: 12px; }
+  .summary { color: var(--muted); line-height: 1.8; max-width: 640px; }
+  .links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .links a { text-decoration: none; font-weight: 800; padding: 10px 18px; border-radius: 999px;
+             border: 3px solid var(--fg); transition: transform .15s; }
+  .links a:hover { transform: rotate(-3deg) scale(1.05); background: var(--fg); color: var(--bg); }
+  .career { list-style: none; padding: 0; margin: 0; border-left: 3px dashed #3a3450; }
+  .career li { position: relative; padding: 0 0 18px 22px; }
+  .career li::before { content: ''; position: absolute; left: -9px; top: 6px; width: 14px; height: 14px; border-radius: 50%;
+                       background: var(--accent); }
+  .career .when { font-family: 'DotGothic16', monospace; color: var(--muted); font-size: 13px; }
+  .career .what { font-weight: 800; }
+  .career .detail { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+  /* お礼の箱 */
+  .gift-wrap { text-align: center; margin: 60px 0 20px; }
+  .gift-title { font-size: clamp(24px, 5vw, 34px); line-height: 1.4; }
+  .giftbox { position: relative; width: 150px; height: 140px; border: none; background: none; cursor: pointer;
+             animation: idle 2.4s infinite; }
+  .giftbox .box { position: absolute; left: 15px; right: 15px; bottom: 0; height: 90px; background: var(--accent); border-radius: 6px; }
+  .giftbox .lid { position: absolute; left: 5px; right: 5px; top: 22px; height: 30px; background: #ff7a93; border-radius: 6px;
+                  z-index: 2; transition: transform .6s cubic-bezier(.3, 1.6, .5, 1); }
+  .giftbox .ribbon { position: absolute; left: 66px; width: 18px; top: 22px; bottom: 0; background: #ffe066; z-index: 3; }
+  .giftbox .label { position: absolute; left: 0; right: 0; bottom: 26px; z-index: 4; color: #1b1030; font-size: 22px;
+                    background: #ffe066; width: 64px; margin: auto; border-radius: 6px; }
+  .giftbox.open { animation: none; }
+  .giftbox.open .lid, .giftbox.open .ribbon { transform: translate(40px, -90px) rotate(35deg); }
+  .giftbox.open .ribbon { opacity: 0; transition: .4s; }
+  @keyframes idle { 0%, 80%, 100% { rotate: 0deg; } 85% { rotate: -6deg; } 90% { rotate: 6deg; } 95% { rotate: -3deg; } }
+  #gift { animation: drop .6s; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-20px); } }
 </style>
 </head>
 <body>
 <main>
+  <!-- ===== 自己紹介（中身は /data/profile.json） ===== -->
+  <section class="hero">
+    <div class="who pixel" id="pname"></div>
+    <div class="role" id="prole"></div>
+    <p class="summary" id="psummary"></p>
+    <div class="links" id="plinks"></div>
+  </section>
+
+  <h2>キャリア <small>ざっくり</small></h2>
+  <ol class="career" id="pcareer"></ol>
+
+  <!-- ===== 訪問のお礼 ===== -->
+  <section class="gift-wrap">
+    <h2 class="gift-title">ご来訪のお礼に、<br>無駄をどうぞ。</h2>
+    <button class="giftbox" id="giftbox" aria-label="無駄を受け取る">
+      <span class="lid"></span><span class="box"></span><span class="ribbon"></span>
+      <span class="label pixel">無駄</span>
+    </button>
+    <p class="note" id="gifthint">タップして受け取る（返品不可）</p>
+  </section>
+
+  <div id="gift" hidden>
   <h1>ふざけ箱</h1>
   <p class="tag">押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまって、だんだんグルーヴになる。</p>
 
@@ -78,6 +135,7 @@
     <textarea id="code" placeholder="ここにセーブコード"></textarea>
     <div class="note" id="msg"></div>
   </details>
+  </div>
 
   <footer class="pixel">ふざけ箱 / 2026 / 真面目に作られた不真面目</footer>
 </main>
@@ -85,6 +143,39 @@
 <script src="/core/core.js"></script>
 <script>
 (async function () {
+  // ---- 自己紹介 ----
+  const p = await fetch('/data/profile.json').then(r => r.json());
+  document.title = p.name + ' | ふざけ箱';
+  document.getElementById('pname').textContent = p.name;
+  document.getElementById('prole').textContent = p.role;
+  document.getElementById('psummary').textContent = p.summary;
+  const linksEl = document.getElementById('plinks');
+  for (const l of p.links.filter(l => l.url)) {
+    const a = document.createElement('a');
+    a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = l.label;
+    linksEl.appendChild(a);
+  }
+  const careerEl = document.getElementById('pcareer');
+  for (const c of p.career) {
+    const li = document.createElement('li');
+    li.innerHTML = '<div class="when"></div><div class="what"></div><div class="detail"></div>';
+    li.querySelector('.when').textContent = c.when;
+    li.querySelector('.what').textContent = c.what;
+    li.querySelector('.detail').textContent = c.detail || '';
+    careerEl.appendChild(li);
+  }
+
+  // ---- お礼の箱：一度開けた人には最初から中身を見せる ----
+  const giftEl = document.getElementById('gift'), box = document.getElementById('giftbox');
+  function openGift(first) {
+    box.classList.add('open');
+    giftEl.hidden = false;
+    document.getElementById('gifthint').textContent = first ? 'おめでとうございます。無駄です。' : 'またのご来訪ありがとうございます。無駄です。';
+    if (first) setTimeout(() => giftEl.scrollIntoView({ behavior: 'smooth' }), 500);
+  }
+  if (FZ.stat('top', 'gifts') > 0) openGift(false);
+  box.onclick = () => { if (!box.classList.contains('open')) { FZ.add('top', 'gifts', 1); openGift(true); } };
+
   // ---- アプリ一覧 ----
   const apps = await fetch('/data/apps.json').then(r => r.json());
   const appsEl = document.getElementById('apps');

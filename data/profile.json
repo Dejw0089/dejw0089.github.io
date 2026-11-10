@@ -1,0 +1,13 @@
+{
+  "name": "（お名前）",
+  "role": "（肩書き・一言で）",
+  "summary": "（2〜3行の自己紹介）",
+  "links": [
+    { "label": "LinkedIn", "url": "" },
+    { "label": "Wantedly", "url": "" }
+  ],
+  "career": [
+    { "when": "20XX–現在", "what": "（会社・役割）", "detail": "（やっていること一行）" },
+    { "when": "20XX–20XX", "what": "（会社・役割）", "detail": "（やっていること一行）" }
+  ]
+}
