@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>納豆まぜまぜ — ふざけ箱</title>
+<title>Natto Stirrer — FUZAKE BOX</title>
 <link rel="stylesheet" href="/core/core.css">
 <style>
   body { overflow: hidden; user-select: none; -webkit-user-select: none; }
@@ -15,16 +15,33 @@
 </style>
 </head>
 <body>
-<div class="fz-bar"><a href="/">← ふざけ箱</a><span>納豆まぜまぜ</span></div>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
 <canvas id="c"></canvas>
 <div class="hud">
-  <div id="rot">0 回</div>
-  <div id="msg">器のまわりをぐるぐるなぞってまぜろ</div>
+  <div id="rot"></div>
+  <div id="msg" data-i18n="intro"></div>
   <div id="total"></div>
 </div>
 <script src="/core/core.js"></script>
 <script>
 const APP = 'natto';
+const T = {
+  en: {
+    back: '← FUZAKE BOX', title: 'Natto Stirrer', intro: 'Trace circles around the bowl to stir',
+    rot: n => n + ' stirs', total: n => 'Lifetime stirs: ' + n,
+    msgs: { 5: 'Still just beans.', 20: 'A few threads appear', 50: 'Getting sticky', 100: 'Sticky', 200: 'Sticky sticky sticky',
+            300: 'A gourmet somewhere nods in approval', 424: 'It is mostly threads now', 1000: 'The natto has become the universe' },
+  },
+  ja: {
+    back: '← ふざけ箱', title: '納豆まぜまぜ', intro: '器のまわりをぐるぐるなぞってまぜろ',
+    rot: n => n + ' 回', total: n => '生涯まぜ回数 ' + n + ' 回',
+    msgs: { 5: 'まだ豆。', 20: 'ちょっと糸が出てきた', 50: '粘りが出てきた', 100: 'ネバネバ', 200: 'ネバネバネバネバ',
+            300: '北大路魯山人が頷いている', 424: 'もはや糸しかない', 1000: '納豆が宇宙になった' },
+  },
+};
+const L = FZ.apply(T);
+document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX');
+FZ.langToggle(document.getElementById('right'));
 const cv = document.getElementById('c'), g = cv.getContext('2d');
 const rotEl = document.getElementById('rot'), msgEl = document.getElementById('msg'), totalEl = document.getElementById('total');
 let W, H, R, dpr;
@@ -38,7 +55,8 @@ resize(); addEventListener('resize', resize);
 // 豆
 const beans = Array.from({ length: 46 }, () => ({ a: Math.random() * 6.28, r: Math.random() * 0.8, s: 0.5 + Math.random() * 0.8 }));
 let session = 0, acc = 0, spin = 0, last = null, dragging = false;
-const msgs = { 5: 'まだ豆。', 20: 'ちょっと糸が出てきた', 50: '粘りが出てきた', 100: 'ネバネバ', 200: 'ネバネバネバネバ', 300: '北大路魯山人が頷いている', 424: 'もはや糸しかない', 1000: '納豆が宇宙になった' };
+const msgs = L.msgs;
+document.getElementById('rot').textContent = L.rot(0);
 
 function angle(e) { return Math.atan2(e.clientY - H / 2, e.clientX - W / 2); }
 cv.addEventListener('pointerdown', e => { dragging = true; last = angle(e); cv.setPointerCapture(e.pointerId); });
@@ -57,12 +75,12 @@ cv.addEventListener('pointermove', e => {
     acc -= Math.PI * 2;
     session++;
     FZ.add(APP, 'rotations', 1);
-    rotEl.textContent = session + ' 回';
+    rotEl.textContent = L.rot(session);
     if (msgs[session]) msgEl.textContent = msgs[session];
     showTotal();
   }
 });
-function showTotal() { totalEl.textContent = '生涯まぜ回数 ' + FZ.stat(APP, 'rotations') + ' 回'; }
+function showTotal() { totalEl.textContent = L.total(FZ.stat(APP, 'rotations')); }
 showTotal();
 
 function draw() {

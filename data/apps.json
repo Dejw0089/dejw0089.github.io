@@ -1,5 +1,11 @@
 [
-  { "id": "muda-button", "title": "無駄ボタン",   "emoji": "🔴", "desc": "押しても何も起きない。本当に。", "color": "#ff4d6d" },
-  { "id": "natto",       "title": "納豆まぜまぜ", "emoji": "🫘", "desc": "ぐるぐるして粘りを極めろ。",     "color": "#e9c46a" },
-  { "id": "kyomu",       "title": "虚無タイマー", "emoji": "🕳️", "desc": "何もしない時間を競う。触ったら負け。", "color": "#6c63ff" }
+  { "id": "muda-button", "emoji": "🔴", "color": "#ff4d6d",
+    "title": { "en": "Useless Button", "ja": "無駄ボタン" },
+    "desc":  { "en": "Nothing happens when you press it. Really.", "ja": "押しても何も起きない。本当に。" } },
+  { "id": "natto", "emoji": "🫘", "color": "#e9c46a",
+    "title": { "en": "Natto Stirrer", "ja": "納豆まぜまぜ" },
+    "desc":  { "en": "Stir in circles. Master the stickiness.", "ja": "ぐるぐるして粘りを極めろ。" } },
+  { "id": "kyomu", "emoji": "🕳️", "color": "#6c63ff",
+    "title": { "en": "Void Timer", "ja": "虚無タイマー" },
+    "desc":  { "en": "Compete at doing nothing. Touch anything and you lose.", "ja": "何もしない時間を競う。触ったら負け。" } }
 ]

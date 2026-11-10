@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>虚無タイマー — ふざけ箱</title>
+<title>Void Timer — FUZAKE BOX</title>
 <link rel="stylesheet" href="/core/core.css">
 <style>
   body { display: grid; place-items: center; text-align: center; transition: background 2s; user-select: none; }
@@ -17,22 +17,45 @@
 </style>
 </head>
 <body>
-<div class="fz-bar"><a href="/">← ふざけ箱</a><span>虚無タイマー</span></div>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
 <div>
   <div id="time">0.0</div>
-  <div id="say">何もしない時間を計ります。<br>マウスもキーも画面も触ったら終わり。</div>
-  <button id="start">虚無を始める</button>
+  <div id="say" data-i18n-html="intro"></div>
+  <button id="start" data-i18n="start"></button>
   <div id="rec"></div>
 </div>
 <script src="/core/core.js"></script>
 <script>
 const APP = 'kyomu';
+const T = {
+  en: {
+    back: '← FUZAKE BOX', title: 'Void Timer', start: 'Enter the void', again: 'Void again',
+    intro: 'Measures how long you do nothing.<br>Touch the mouse, keys or screen and it ends.',
+    lines: [[3, '…'], [8, 'You are doing nothing nicely'], [15, 'The void deepens'], [25, 'Something is about to… not happen'],
+            [30, 'You are, right now, doing nothing'], [45, 'Someone behind the screen is watching (no one is)'], [60, '1 minute. A respectable void'],
+            [120, '2 minutes. This is training now'], [300, '5 minutes. On the edge of enlightenment']],
+    rec: (b, t) => 'Best ' + b + 's / Total void ' + t + 's',
+    failed: (r, s) => 'Void failed.<br>' + r + ' (' + s + 's)',
+    moved: 'You moved.', touched: 'You touched it.', key: 'You pressed a key.', wheel: 'You scrolled.', away: 'You looked away.',
+  },
+  ja: {
+    back: '← ふざけ箱', title: '虚無タイマー', start: '虚無を始める', again: 'もう一度虚無る',
+    intro: '何もしない時間を計ります。<br>マウスもキーも画面も触ったら終わり。',
+    lines: [[3, '…'], [8, 'いい感じに何もしていません'], [15, '虚無が深まってきました'], [25, 'あと少しで何かが…起きません'],
+            [30, 'あなたは今、何もしていない'], [45, '画面の向こうで誰かが見ています（いません）'], [60, '1分。立派な虚無です'],
+            [120, '2分。もはや修行'], [300, '5分。悟りの手前']],
+    rec: (b, t) => '最高 ' + b + ' 秒 ／ 累計虚無 ' + t + ' 秒',
+    failed: (r, s) => '虚無、失敗。<br>' + r + '（' + s + '秒）',
+    moved: '動きましたね', touched: '触りましたね', key: 'キーを押しましたね', wheel: 'スクロールしましたね', away: 'よそ見しましたね',
+  },
+};
+const L = FZ.apply(T);
+document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX');
+FZ.langToggle(document.getElementById('right'));
+
 const timeEl = document.getElementById('time'), say = document.getElementById('say'), rec = document.getElementById('rec'), start = document.getElementById('start');
-const lines = [[3, '…'], [8, 'いい感じに何もしていません'], [15, '虚無が深まってきました'], [25, 'あと少しで何かが…起きません'],
-               [30, 'あなたは今、何もしていない'], [45, '画面の向こうで誰かが見ています（いません）'], [60, '1分。立派な虚無です'],
-               [120, '2分。もはや修行'], [300, '5分。悟りの手前']];
 let t0 = 0, raf = 0, armed = false;
-function showRec() { rec.textContent = '最高 ' + FZ.stat(APP, 'best') + ' 秒 ／ 累計虚無 ' + FZ.stat(APP, 'total') + ' 秒'; }
+function showRec() { rec.textContent = L.rec(FZ.stat(APP, 'best'), FZ.stat(APP, 'total')); }
 showRec();
 
 start.onclick = e => {
@@ -47,7 +70,7 @@ start.onclick = e => {
 function tick() {
   const s = (performance.now() - t0) / 1000;
   timeEl.textContent = s.toFixed(1);
-  for (const [sec, l] of lines) if (s >= sec) say.textContent = l;
+  for (const [sec, l] of L.lines) if (s >= sec) say.textContent = l;
   raf = requestAnimationFrame(tick);
 }
 function fail(reason) {
@@ -58,15 +81,15 @@ function fail(reason) {
   FZ.max(APP, 'best', s);
   FZ.add(APP, 'total', s);
   document.body.classList.remove('void');
-  say.innerHTML = '虚無、失敗。<br>' + reason + '（' + s + '秒）';
-  start.textContent = 'もう一度虚無る';
+  say.innerHTML = L.failed(reason, s);
+  start.textContent = L.again;
   showRec();
 }
-addEventListener('pointermove', () => fail('動きましたね'));
-addEventListener('pointerdown', () => fail('触りましたね'));
-addEventListener('keydown', () => fail('キーを押しましたね'));
-addEventListener('wheel', () => fail('スクロールしましたね'));
-document.addEventListener('visibilitychange', () => { if (document.hidden) fail('よそ見しましたね'); });
+addEventListener('pointermove', () => fail(L.moved));
+addEventListener('pointerdown', () => fail(L.touched));
+addEventListener('keydown', () => fail(L.key));
+addEventListener('wheel', () => fail(L.wheel));
+document.addEventListener('visibilitychange', () => { if (document.hidden) fail(L.away); });
 </script>
 </body>
 </html>

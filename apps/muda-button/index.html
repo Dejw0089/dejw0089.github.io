@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>無駄ボタン — ふざけ箱</title>
+<title>Useless Button — FUZAKE BOX</title>
 <link rel="stylesheet" href="/core/core.css">
 <style>
   body { display: grid; place-items: center; overflow: hidden; user-select: none; -webkit-user-select: none; }
@@ -22,26 +22,42 @@
 </style>
 </head>
 <body>
-<div class="fz-bar"><a href="/">← ふざけ箱</a><span>無駄ボタン</span></div>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
 <div class="wrap">
-  <button id="btn">押す</button>
-  <div id="say">押しても何も起きません。</div>
+  <button id="btn" data-i18n="press"></button>
+  <div id="say" data-i18n="intro"></div>
   <div id="n"></div>
 </div>
 <script src="/core/core.js"></script>
 <script>
 const APP = 'muda-button';
-const btn = document.getElementById('btn'), say = document.getElementById('say'), n = document.getElementById('n');
-const lines = [
-  '何も起きませんでした。', '押しましたね。', 'はい。', '特にないです。', '今のは良い押しでした。',
-  '記録しました。誰も見ませんが。', 'ボタンは何も感じていません。', 'まだ押すんですか。',
-  '人生のうち0.3秒を使いました。', '…', 'ありがとうございました（何が？）', 'ボタンが少しすり減りました。'
-];
-const milestones = {
-  1: '押しても何も起きないと言ったのに。', 10: '10回目。何か貰えるかもしれません（貰えます）',
-  50: '50回。ここまで来ると立派な趣味です。', 100: '100回。ボタンが悲鳴をあげています。',
-  500: '500回。ボタンがあなたを覚えました。', 1000: '1000回。もう家族です。'
+const T = {
+  en: {
+    back: '← FUZAKE BOX', title: 'Useless Button', press: 'PRESS', intro: 'Nothing happens when you press it.',
+    total: n => 'Total: ' + n + ' presses',
+    lines: ['Nothing happened.', 'You pressed it.', 'Yes.', 'Nothing in particular.', 'That was a good press.',
+            'Recorded. Nobody will look at it.', 'The button feels nothing.', 'Still pressing?',
+            'You spent 0.3 seconds of your life.', '…', 'Thank you (for what?)', 'The button wore down slightly.'],
+    milestones: { 1: 'I told you nothing would happen.', 10: '10 presses. You might get something (you will).',
+                  50: '50. At this point it is a respectable hobby.', 100: '100. The button is screaming.',
+                  500: '500. The button remembers you now.', 1000: '1000. You are family now.' },
+  },
+  ja: {
+    back: '← ふざけ箱', title: '無駄ボタン', press: '押す', intro: '押しても何も起きません。',
+    total: n => '累計 ' + n + ' 回',
+    lines: ['何も起きませんでした。', '押しましたね。', 'はい。', '特にないです。', '今のは良い押しでした。',
+            '記録しました。誰も見ませんが。', 'ボタンは何も感じていません。', 'まだ押すんですか。',
+            '人生のうち0.3秒を使いました。', '…', 'ありがとうございました（何が？）', 'ボタンが少しすり減りました。'],
+    milestones: { 1: '押しても何も起きないと言ったのに。', 10: '10回目。何か貰えるかもしれません（貰えます）',
+                  50: '50回。ここまで来ると立派な趣味です。', 100: '100回。ボタンが悲鳴をあげています。',
+                  500: '500回。ボタンがあなたを覚えました。', 1000: '1000回。もう家族です。' },
+  },
 };
+const L = FZ.apply(T);
+document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX');
+FZ.langToggle(document.getElementById('right'));
+
+const btn = document.getElementById('btn'), say = document.getElementById('say'), n = document.getElementById('n');
 let ctx;
 function beep() {
   try {
@@ -55,7 +71,7 @@ function beep() {
     o.start(); o.stop(ctx.currentTime + 0.13);
   } catch (e) {}
 }
-function show() { n.textContent = '累計 ' + FZ.stat(APP, 'presses') + ' 回'; }
+function show() { n.textContent = L.total(FZ.stat(APP, 'presses')); }
 show();
 
 btn.addEventListener('pointerdown', () => btn.classList.add('down'));
@@ -63,7 +79,7 @@ btn.addEventListener('pointerdown', () => btn.classList.add('down'));
 btn.addEventListener('click', () => {
   FZ.add(APP, 'presses', 1);
   const c = FZ.stat(APP, 'presses');
-  say.textContent = milestones[c] || lines[Math.floor(Math.random() * lines.length)];
+  say.textContent = L.milestones[c] || L.lines[Math.floor(Math.random() * L.lines.length)];
   if (Math.random() < 0.08) { document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake'); }
   beep();
   show();

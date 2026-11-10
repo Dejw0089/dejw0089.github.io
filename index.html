@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ふざけ箱 — クソゲー・バカアプリ置き場</title>
-<meta name="description" content="押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまってグルーヴになる。">
+<title>Yusuke Iwasaki</title>
+<meta name="description" content="Yusuke Iwasaki — PjM / PdM / PMO. Plus a gift of pure uselessness.">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#12101a">
 <link rel="stylesheet" href="/core/core.css">
@@ -75,7 +75,7 @@
                   z-index: 2; transition: transform .6s cubic-bezier(.3, 1.6, .5, 1); }
   .giftbox .ribbon { position: absolute; left: 66px; width: 18px; top: 22px; bottom: 0; background: #ffe066; z-index: 3; }
   .giftbox .label { position: absolute; left: 0; right: 0; bottom: 26px; z-index: 4; color: #1b1030; font-size: 22px;
-                    background: #ffe066; width: 64px; margin: auto; border-radius: 6px; }
+                    background: #ffe066; width: max-content; padding: 0 8px; margin: auto; border-radius: 6px; }
   .giftbox.open { animation: none; }
   .giftbox.open .lid, .giftbox.open .ribbon { transform: translate(40px, -90px) rotate(35deg); }
   .giftbox.open .ribbon { opacity: 0; transition: .4s; }
@@ -94,74 +94,122 @@
     <div class="links" id="plinks"></div>
   </section>
 
-  <h2>キャリア <small>ざっくり</small></h2>
+  <h2><span data-i18n="career"></span> <small data-i18n="careerSub"></small></h2>
   <ol class="career" id="pcareer"></ol>
 
   <!-- ===== 訪問のお礼 ===== -->
   <section class="gift-wrap">
-    <h2 class="gift-title">ご来訪のお礼に、<br>無駄をどうぞ。</h2>
-    <button class="giftbox" id="giftbox" aria-label="無駄を受け取る">
+    <h2 class="gift-title" data-i18n-html="giftTitle"></h2>
+    <button class="giftbox" id="giftbox">
       <span class="lid"></span><span class="box"></span><span class="ribbon"></span>
-      <span class="label pixel">無駄</span>
+      <span class="label pixel" data-i18n="giftLabel"></span>
     </button>
-    <p class="note" id="gifthint">タップして受け取る（返品不可）</p>
+    <p class="note" id="gifthint" data-i18n="giftHint"></p>
   </section>
 
   <div id="gift" hidden>
-  <h1>ふざけ箱</h1>
-  <p class="tag">押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまって、だんだんグルーヴになる。</p>
+  <h1 data-i18n="boxName"></h1>
+  <p class="tag" data-i18n="tagline"></p>
 
-  <h2>アプリ <small>どれも意味はない</small></h2>
+  <h2><span data-i18n="apps"></span> <small data-i18n="appsSub"></small></h2>
   <div class="apps" id="apps"></div>
 
-  <h2>グルーヴ機 <small id="count" class="count"></small></h2>
+  <h2><span data-i18n="groove"></span> <small id="count" class="count"></small></h2>
   <div class="groove" id="groove">
     <div class="row">
-      <button class="btn big" id="play">▶ 鳴らす</button>
-      <span class="note">集めた音源をタップでON/OFF。全部120BPMで勝手に合う。</span>
+      <button class="btn big" id="play"></button>
+      <span class="note" data-i18n="grooveNote"></span>
     </div>
     <div class="tracks" id="tracks"></div>
   </div>
 
-  <h2>セーブ <small>引っ越し・消えたとき用</small></h2>
+  <h2><span data-i18n="save"></span> <small data-i18n="saveSub"></small></h2>
   <details>
-    <summary>セーブコードを出す / 読み込む</summary>
-    <p class="note">進捗はこのブラウザに保存されます。iPhoneのSafariはしばらく開かないと消えることがあるので、ホーム画面に追加するか、たまにコードを控えておくと安心です。</p>
+    <summary data-i18n="saveSummary"></summary>
+    <p class="note" data-i18n="saveNote"></p>
     <div class="row">
-      <button class="btn" id="exp">コードを出す</button>
-      <button class="btn" id="imp">このコードを読み込む</button>
-      <button class="btn" id="rst">全部消す</button>
+      <button class="btn" id="exp" data-i18n="exp"></button>
+      <button class="btn" id="imp" data-i18n="imp"></button>
+      <button class="btn" id="rst" data-i18n="rst"></button>
     </div>
-    <textarea id="code" placeholder="ここにセーブコード"></textarea>
+    <textarea id="code"></textarea>
     <div class="note" id="msg"></div>
   </details>
   </div>
 
-  <footer class="pixel">ふざけ箱 / 2026 / 真面目に作られた不真面目</footer>
+  <footer class="pixel" data-i18n="footer"></footer>
 </main>
 
 <script src="/core/core.js"></script>
 <script>
+const T = {
+  en: {
+    career: 'Career', careerSub: 'in short',
+    giftTitle: 'As thanks for visiting,<br>please accept some uselessness.',
+    giftLabel: 'USELESS', giftHint: 'Tap to receive (no returns)', giftAria: 'Receive the uselessness',
+    giftOpened: 'Congratulations. It is useless.', giftAgain: 'Thanks for coming back. Still useless.',
+    boxName: 'FUZAKE BOX',
+    tagline: 'A button that does nothing, natto, and the void. Play them to collect sounds, which slowly turn into a groove.',
+    apps: 'Apps', appsSub: 'none of them mean anything',
+    groove: 'Groove Machine', sounds: 'sounds',
+    grooveNote: 'Tap collected sounds to toggle them. Everything is 120 BPM, so it just fits.',
+    play: '▶ Play', stop: '■ Stop', loading: '…loading', noSounds: 'No sounds yet. Go play the apps.',
+    locked: '???',
+    save: 'Save', saveSub: 'for moving devices or lost data',
+    saveSummary: 'Show / load a save code',
+    saveNote: 'Progress is stored in this browser. Safari on iPhone may delete it if you do not visit for a while, so add this page to your Home Screen or keep a save code somewhere.',
+    exp: 'Show code', imp: 'Load this code', rst: 'Erase everything',
+    codePh: 'Save code goes here', copied: 'Copy it and keep it somewhere.', loaded: 'Loaded.',
+    confirmReset: 'All records and sounds will be erased. OK?',
+    footer: 'FUZAKE BOX / 2026 / seriously made, not serious',
+  },
+  ja: {
+    career: 'キャリア', careerSub: 'ざっくり',
+    giftTitle: 'ご来訪のお礼に、<br>無駄をどうぞ。',
+    giftLabel: '無駄', giftHint: 'タップして受け取る（返品不可）', giftAria: '無駄を受け取る',
+    giftOpened: 'おめでとうございます。無駄です。', giftAgain: 'またのご来訪ありがとうございます。無駄です。',
+    boxName: 'ふざけ箱',
+    tagline: '押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまって、だんだんグルーヴになる。',
+    apps: 'アプリ', appsSub: 'どれも意味はない',
+    groove: 'グルーヴ機', sounds: '音源',
+    grooveNote: '集めた音源をタップでON/OFF。全部120BPMで勝手に合う。',
+    play: '▶ 鳴らす', stop: '■ 止める', loading: '…読み込み中', noSounds: 'まだ音源がない。アプリで遊べ',
+    locked: '？？？',
+    save: 'セーブ', saveSub: '引っ越し・消えたとき用',
+    saveSummary: 'セーブコードを出す / 読み込む',
+    saveNote: '進捗はこのブラウザに保存されます。iPhoneのSafariはしばらく開かないと消えることがあるので、ホーム画面に追加するか、たまにコードを控えておくと安心です。',
+    exp: 'コードを出す', imp: 'このコードを読み込む', rst: '全部消す',
+    codePh: 'ここにセーブコード', copied: 'コピーしてどこかに貼っておいてください。', loaded: '読み込みました。',
+    confirmReset: '全部の記録と音源が消えます。いいですか？',
+    footer: 'ふざけ箱 / 2026 / 真面目に作られた不真面目',
+  },
+};
+const L = FZ.apply(T);
+const t = FZ.t;
+FZ.langToggle();
+document.getElementById('giftbox').setAttribute('aria-label', L.giftAria);
+document.getElementById('code').placeholder = L.codePh;
+
 (async function () {
   // ---- 自己紹介 ----
   const p = await fetch('/data/profile.json').then(r => r.json());
-  document.title = p.name + ' | ふざけ箱';
-  document.getElementById('pname').textContent = p.name;
-  document.getElementById('prole').textContent = p.role;
-  document.getElementById('psummary').textContent = p.summary;
+  document.title = p.name + ' | ' + L.boxName;
+  document.getElementById('pname').textContent = t(p.name);
+  document.getElementById('prole').textContent = t(p.role);
+  document.getElementById('psummary').textContent = t(p.summary);
   const linksEl = document.getElementById('plinks');
   for (const l of p.links.filter(l => l.url)) {
     const a = document.createElement('a');
-    a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = l.label;
+    a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t(l.label);
     linksEl.appendChild(a);
   }
   const careerEl = document.getElementById('pcareer');
   for (const c of p.career) {
     const li = document.createElement('li');
     li.innerHTML = '<div class="when"></div><div class="what"></div><div class="detail"></div>';
-    li.querySelector('.when').textContent = c.when;
-    li.querySelector('.what').textContent = c.what;
-    li.querySelector('.detail').textContent = c.detail || '';
+    li.querySelector('.when').textContent = t(c.when);
+    li.querySelector('.what').textContent = t(c.what);
+    li.querySelector('.detail').textContent = t(c.detail) || '';
     careerEl.appendChild(li);
   }
 
@@ -170,7 +218,7 @@
   function openGift(first) {
     box.classList.add('open');
     giftEl.hidden = false;
-    document.getElementById('gifthint').textContent = first ? 'おめでとうございます。無駄です。' : 'またのご来訪ありがとうございます。無駄です。';
+    document.getElementById('gifthint').textContent = first ? L.giftOpened : L.giftAgain;
     if (first) setTimeout(() => giftEl.scrollIntoView({ behavior: 'smooth' }), 500);
   }
   if (FZ.stat('top', 'gifts') > 0) openGift(false);
@@ -186,15 +234,15 @@
     el.style.setProperty('--c', a.color);
     el.innerHTML = '<div class="emo"></div><div class="t"></div><div class="d"></div>';
     el.querySelector('.emo').textContent = a.emoji;
-    el.querySelector('.t').textContent = a.title;
-    el.querySelector('.d').textContent = a.desc;
+    el.querySelector('.t').textContent = t(a.title);
+    el.querySelector('.d').textContent = t(a.desc);
     appsEl.appendChild(el);
   }
 
   // ---- グルーヴ機 ----
   const rules = await FZ.rules();
   const unlocked = new Set(FZ.unlocked());
-  document.getElementById('count').textContent = unlocked.size + ' / ' + rules.length + ' 音源';
+  document.getElementById('count').textContent = unlocked.size + ' / ' + rules.length + ' ' + L.sounds;
 
   const tracksEl = document.getElementById('tracks');
   const on = new Set([...unlocked]);  // 解放済みは最初から全部ON
@@ -205,8 +253,8 @@
     const has = unlocked.has(r.id);
     b.className = 'trk' + (has ? ' on' : ' locked');
     b.innerHTML = '<div class="n"></div><div class="h"></div>';
-    b.querySelector('.n').textContent = has ? r.name : '？？？';
-    b.querySelector('.h').textContent = has ? '' : r.hint;
+    b.querySelector('.n').textContent = has ? t(r.name) : L.locked;
+    b.querySelector('.h').textContent = has ? '' : t(r.hint);
     if (has) b.onclick = () => {
       on.has(r.id) ? on.delete(r.id) : on.add(r.id);
       b.classList.toggle('on', on.has(r.id));
@@ -217,12 +265,13 @@
 
   const playBtn = document.getElementById('play');
   const groove = document.getElementById('groove');
+  playBtn.textContent = L.play;
   playBtn.onclick = async () => {
     if (sources.length) { stop(); return; }
-    if (!unlocked.size) { playBtn.textContent = 'まだ音源がない。アプリで遊べ'; return; }
+    if (!unlocked.size) { playBtn.textContent = L.noSounds; return; }
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
     await ctx.resume();
-    playBtn.textContent = '…読み込み中';
+    playBtn.textContent = L.loading;
     const list = rules.filter(r => unlocked.has(r.id));
     await Promise.all(list.map(async r => {
       if (!buffers[r.id]) {
@@ -243,13 +292,13 @@
       sources.push(src);
     }
     groove.classList.add('playing');
-    playBtn.textContent = '■ 止める';
+    playBtn.textContent = L.stop;
   };
   function stop() {
     sources.forEach(s => s.stop());
     sources = []; gains = {};
     groove.classList.remove('playing');
-    playBtn.textContent = '▶ 鳴らす';
+    playBtn.textContent = L.play;
   }
 
   // ---- セーブコード ----
@@ -257,14 +306,14 @@
   document.getElementById('exp').onclick = () => {
     code.value = FZ.exportCode();
     code.select();
-    msg.textContent = 'コピーしてどこかに貼っておいてください。';
+    msg.textContent = L.copied;
   };
   document.getElementById('imp').onclick = () => {
-    try { FZ.importCode(code.value); msg.textContent = '読み込みました。'; setTimeout(() => location.reload(), 600); }
+    try { FZ.importCode(code.value); msg.textContent = L.loaded; setTimeout(() => location.reload(), 600); }
     catch (e) { msg.textContent = e.message; }
   };
   document.getElementById('rst').onclick = () => {
-    if (confirm('全部の記録と音源が消えます。いいですか？')) { FZ.reset(); location.reload(); }
+    if (confirm(L.confirmReset)) { FZ.reset(); location.reload(); }
   };
 })();
 </script>

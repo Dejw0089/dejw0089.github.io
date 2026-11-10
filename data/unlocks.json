@@ -1,8 +1,20 @@
 [
-  { "id": "kick",  "name": "虚無キック",       "file": "/sounds/kick.wav",  "app": "muda-button", "stat": "presses",   "gte": 10,  "hint": "無駄ボタンを10回押す" },
-  { "id": "hat",   "name": "ボタンの悲鳴ハット", "file": "/sounds/hat.wav",   "app": "muda-button", "stat": "presses",   "gte": 100, "hint": "無駄ボタンを100回押す" },
-  { "id": "bass",  "name": "ねばねばベース",     "file": "/sounds/bass.wav",  "app": "natto",       "stat": "rotations", "gte": 20,  "hint": "納豆を20回まぜる" },
-  { "id": "lead",  "name": "納豆リード",         "file": "/sounds/lead.wav",  "app": "natto",       "stat": "rotations", "gte": 300, "hint": "納豆を300回まぜる（北大路魯山人ライン）" },
-  { "id": "pad",   "name": "虚無パッド",         "file": "/sounds/pad.wav",   "app": "kyomu",       "stat": "best",      "gte": 30,  "hint": "虚無タイマーで30秒なにもしない" },
-  { "id": "boing", "name": "ボヨヨン",           "file": "/sounds/boing.wav", "app": "kyomu",       "stat": "total",     "gte": 300, "hint": "虚無を合計300秒ためる" }
+  { "id": "kick", "file": "/sounds/kick.wav", "app": "muda-button", "stat": "presses", "gte": 10,
+    "name": { "en": "Void Kick", "ja": "虚無キック" },
+    "hint": { "en": "Press the Useless Button 10 times", "ja": "無駄ボタンを10回押す" } },
+  { "id": "hat", "file": "/sounds/hat.wav", "app": "muda-button", "stat": "presses", "gte": 100,
+    "name": { "en": "Screaming Button Hat", "ja": "ボタンの悲鳴ハット" },
+    "hint": { "en": "Press the Useless Button 100 times", "ja": "無駄ボタンを100回押す" } },
+  { "id": "bass", "file": "/sounds/bass.wav", "app": "natto", "stat": "rotations", "gte": 20,
+    "name": { "en": "Sticky Bass", "ja": "ねばねばベース" },
+    "hint": { "en": "Stir the natto 20 times", "ja": "納豆を20回まぜる" } },
+  { "id": "lead", "file": "/sounds/lead.wav", "app": "natto", "stat": "rotations", "gte": 300,
+    "name": { "en": "Natto Lead", "ja": "納豆リード" },
+    "hint": { "en": "Stir the natto 300 times (gourmet level)", "ja": "納豆を300回まぜる（北大路魯山人ライン）" } },
+  { "id": "pad", "file": "/sounds/pad.wav", "app": "kyomu", "stat": "best", "gte": 30,
+    "name": { "en": "Void Pad", "ja": "虚無パッド" },
+    "hint": { "en": "Do nothing for 30 seconds on the Void Timer", "ja": "虚無タイマーで30秒なにもしない" } },
+  { "id": "boing", "file": "/sounds/boing.wav", "app": "kyomu", "stat": "total", "gte": 300,
+    "name": { "en": "Boing", "ja": "ボヨヨン" },
+    "hint": { "en": "Collect 300 seconds of void in total", "ja": "虚無を合計300秒ためる" } }
 ]
