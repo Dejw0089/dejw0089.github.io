@@ -34,6 +34,7 @@ a { color: inherit; }
 }
 .fz-lang .on { color: #ffe066; }
 body > .fz-lang { position: fixed; top: 12px; right: 12px; z-index: 20; }
+.fz-bar .fz-lang { margin-left: 10px; }
 
 /* 音源ゲットのトースト */
 .fz-toast {
