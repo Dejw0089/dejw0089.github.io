@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Natto Stirrer — FUZAKE BOX</title>
-<link rel="stylesheet" href="/core/core.css?v=4">
+<link rel="stylesheet" href="/core/core.css?v=5">
 <style>
   body { overflow: hidden; user-select: none; -webkit-user-select: none; }
   canvas { display: block; width: 100vw; height: 100vh; touch-action: none; cursor: grab; }
@@ -22,7 +22,7 @@
   <div id="msg" data-i18n="intro"></div>
   <div id="total"></div>
 </div>
-<script src="/core/core.js?v=4"></script>
+<script src="/core/core.js?v=5"></script>
 <script>
 const APP = 'natto';
 const T = {
@@ -39,8 +39,9 @@ const T = {
             300: '北大路魯山人が頷いている', 424: 'もはや糸しかない', 1000: '納豆が宇宙になった' },
   },
 };
-const L = FZ.apply(T);
-document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX');
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX'); }
+setTitle();
 FZ.langToggle(document.getElementById('right'));
 const cv = document.getElementById('c'), g = cv.getContext('2d');
 const rotEl = document.getElementById('rot'), msgEl = document.getElementById('msg'), totalEl = document.getElementById('total');
@@ -55,7 +56,7 @@ resize(); addEventListener('resize', resize);
 // 豆
 const beans = Array.from({ length: 46 }, () => ({ a: Math.random() * 6.28, r: Math.random() * 0.8, s: 0.5 + Math.random() * 0.8 }));
 let session = 0, acc = 0, spin = 0, last = null, dragging = false;
-const msgs = L.msgs;
+
 document.getElementById('rot').textContent = L.rot(0);
 
 function angle(e) { return Math.atan2(e.clientY - H / 2, e.clientX - W / 2); }
@@ -76,7 +77,7 @@ cv.addEventListener('pointermove', e => {
     session++;
     FZ.add(APP, 'rotations', 1);
     rotEl.textContent = L.rot(session);
-    if (msgs[session]) msgEl.textContent = msgs[session];
+    if (L.msgs[session]) msgEl.textContent = L.msgs[session];
     showTotal();
   }
 });
@@ -113,6 +114,7 @@ function draw() {
   requestAnimationFrame(draw);
 }
 draw();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); rotEl.textContent = L.rot(session); showTotal(); });
 </script>
 </body>
 </html>

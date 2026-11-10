@@ -6,40 +6,104 @@
     "ja": "新規事業の0→1立ち上げ、プロダクト開発体制の立て直し、複数プロジェクトのデリバリーと運用改善が専門です。開発・デザイン・採用・組織運営をまたいでチームをつなぎ、曖昧な状況に優先順位と実用的なプロセスを持ち込んで、計画から実行まで前に進めます。PMP保有、フィンランド在住。"
   },
   "links": [
-    { "label": "LinkedIn", "url": "https://www.linkedin.com/in/yusuke-iw/" },
-    { "label": "Wantedly", "url": "https://www.wantedly.com/id/yusuke_iw" },
-    { "label": "GitHub", "url": "https://github.com/yusuke-iw" }
+    {
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/yusuke-iw/"
+    },
+    {
+      "label": "Wantedly",
+      "url": "https://www.wantedly.com/id/yusuke_iw",
+      "only": "ja"
+    },
+    {
+      "label": "GitHub",
+      "url": "https://github.com/yusuke-iw"
+    }
   ],
   "career": [
     {
-      "when": { "en": "Aug 2026 – Present", "ja": "2026.08 – 現在" },
-      "what": { "en": "AI data platforms (several) — Generalist Expert", "ja": "複数のAIデータプラットフォーム　Generalist Expert" },
-      "detail": { "en": "Working as a Contributor and Reviewer on AI training and evaluation work.", "ja": "AIの学習・評価に関わる業務で、ContributorとReviewerを担当。" }
+      "when": {
+        "en": "Aug 2026 – Present",
+        "ja": "2026.08 – 現在"
+      },
+      "what": {
+        "en": "AI data platforms (several) — Generalist Expert",
+        "ja": "複数のAIデータプラットフォーム　Generalist Expert"
+      },
+      "detail": {
+        "en": "Working as a Contributor and Reviewer on AI training and evaluation work.",
+        "ja": "AIの学習・評価に関わる業務で、ContributorとReviewerを担当。"
+      }
     },
     {
-      "when": { "en": "2023 – Present", "ja": "2023 – 現在" },
-      "what": { "en": "Startup studio — Head of Engineering Management", "ja": "スタートアップスタジオ　エンジニアリングマネジメント責任者" },
-      "detail": { "en": "Leading staffing, recruitment and organizational development for a 200+ expert organization, while also working as PdM / PjM.", "ja": "200名超の専門家組織のアサイン・採用・組織開発を担いつつ、PdM / PjMも兼務。" }
+      "when": {
+        "en": "2023 – Present",
+        "ja": "2023 – 現在"
+      },
+      "what": {
+        "en": "Startup studio — Head of Engineering Management",
+        "ja": "スタートアップスタジオ　エンジニアリングマネジメント責任者"
+      },
+      "detail": {
+        "en": "Leading staffing, recruitment and organizational development for a 200+ expert organization, while also working as PdM / PjM.",
+        "ja": "200名超の専門家組織のアサイン・採用・組織開発を担いつつ、PdM / PjMも兼務。"
+      }
     },
     {
-      "when": { "en": "2022 – Present", "ja": "2022 – 現在" },
-      "what": { "en": "Startup — Product Manager (freelance)", "ja": "スタートアップ　プロダクトマネージャー（業務委託）" },
-      "detail": { "en": "Driving product development from ideation to execution, and operational improvement through DX.", "ja": "構想から実行までのプロダクト開発と、DXによる業務改善を推進。" }
+      "when": {
+        "en": "2022 – Present",
+        "ja": "2022 – 現在"
+      },
+      "what": {
+        "en": "Startup — Product Manager (freelance)",
+        "ja": "スタートアップ　プロダクトマネージャー（業務委託）"
+      },
+      "detail": {
+        "en": "Driving product development from ideation to execution, and operational improvement through DX.",
+        "ja": "構想から実行までのプロダクト開発と、DXによる業務改善を推進。"
+      }
     },
     {
-      "when": { "en": "2020 – 2023", "ja": "2020 – 2023" },
-      "what": { "en": "Startup studio — PdM / PjM / PMO", "ja": "スタートアップスタジオ　PdM / PjM / PMO" },
-      "detail": { "en": "From government projects to seed-stage startups: led teams of 5–25 on MVPs and requirements, and handled staffing and recruitment.", "ja": "官公庁案件からシード期スタートアップまで、5〜25名のチームでMVP開発・要件定義。採用・アサインも担当。" }
+      "when": {
+        "en": "2020 – 2023",
+        "ja": "2020 – 2023"
+      },
+      "what": {
+        "en": "Startup studio — PdM / PjM / PMO",
+        "ja": "スタートアップスタジオ　PdM / PjM / PMO"
+      },
+      "detail": {
+        "en": "From government projects to seed-stage startups: led teams of 5–25 on MVPs and requirements, and handled staffing and recruitment.",
+        "ja": "官公庁案件からシード期スタートアップまで、5〜25名のチームでMVP開発・要件定義。採用・アサインも担当。"
+      }
     },
     {
-      "when": { "en": "2019 – 2022", "ja": "2019 – 2022" },
-      "what": { "en": "Finnish startup — PjM / HR", "ja": "フィンランドのスタートアップ　PjM / HR" },
-      "detail": { "en": "Turned around the development team and renewed its processes as Scrum Master and Product Coach. Designed recruitment and onboarding.", "ja": "開発チームを立て直し、スクラムマスター兼プロダクトコーチとしてプロセスを刷新。採用・オンボーディングを設計。" }
+      "when": {
+        "en": "2019 – 2022",
+        "ja": "2019 – 2022"
+      },
+      "what": {
+        "en": "Finnish startup — PjM / HR",
+        "ja": "フィンランドのスタートアップ　PjM / HR"
+      },
+      "detail": {
+        "en": "Turned around the development team and renewed its processes as Scrum Master and Product Coach. Designed recruitment and onboarding.",
+        "ja": "開発チームを立て直し、スクラムマスター兼プロダクトコーチとしてプロセスを刷新。採用・オンボーディングを設計。"
+      }
     },
     {
-      "when": { "en": "2013 – 2020", "ja": "2013 – 2020" },
-      "what": { "en": "Web company (later IPO) — UX Designer → PjM → Org Development / PMO", "ja": "Web企業（のちに上場）　UXデザイナー → PjM → 組織開発 / PMO" },
-      "detail": { "en": "Earned PMP and introduced Scrum. Ran every project in the smartphone media division, contributing to 100%+ YoY growth and an in-house MVP award. Then, as PMO, led a 50-person organization's shift to a project-based structure and built its evaluation criteria and training. The company later went public.", "ja": "PMPを取得しスクラムを導入。スマホメディア事業の全プロジェクトを統括し、前年比100%超の成長で社内MVPを受賞。その後PMOとして50名組織のプロジェクト型組織への移行を主導し、評価基準や研修を整備。同社はその後上場。" }
+      "when": {
+        "en": "2013 – 2020",
+        "ja": "2013 – 2020"
+      },
+      "what": {
+        "en": "Web company (later IPO) — UX Designer → PjM → Org Development / PMO",
+        "ja": "Web企業（のちに上場）　UXデザイナー → PjM → 組織開発 / PMO"
+      },
+      "detail": {
+        "en": "Earned PMP and introduced Scrum. Ran every project in the smartphone media division, contributing to 100%+ YoY growth and an in-house MVP award. Then, as PMO, led a 50-person organization's shift to a project-based structure and built its evaluation criteria and training. The company later went public.",
+        "ja": "PMPを取得しスクラムを導入。スマホメディア事業の全プロジェクトを統括し、前年比100%超の成長で社内MVPを受賞。その後PMOとして50名組織のプロジェクト型組織への移行を主導し、評価基準や研修を整備。同社はその後上場。"
+      }
     }
   ]
 }

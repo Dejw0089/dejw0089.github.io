@@ -4,28 +4,86 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yusuke Iwasaki</title>
-<meta name="description" content="Yusuke Iwasaki — PjM / PdM / PMO. Plus a gift of pure uselessness.">
+<meta name="description" content="Yusuke Iwasaki — PjM / PdM / PMO.">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#12101a">
-<link rel="stylesheet" href="/core/core.css?v=4">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#f7f6f2">
+<link rel="stylesheet" href="/core/core.css?v=5">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<script>
+  // 描画前に言語を決めておく（ちらつき防止）
+  try { if (localStorage.getItem('fuzake-box-lang') === 'ja') document.documentElement.lang = 'ja'; } catch (e) {}
+</script>
 <style>
-  main { max-width: 880px; margin: 0 auto; padding: 28px 16px 80px; }
-  h1 { font-family: 'DotGothic16', monospace; font-size: clamp(40px, 9vw, 72px); margin: 8px 0 0; line-height: 1;
-       color: #ffe066; text-shadow: 4px 4px 0 var(--accent); transform: rotate(-2deg); }
-  .tag { color: var(--muted); margin: 14px 0 32px; }
-  h2 { font-family: 'DotGothic16', monospace; font-size: 22px; margin: 40px 0 14px; }
-  h2 small { color: var(--muted); font-size: 14px; margin-left: 8px; }
+  /* 中身が揃うまで隠す（言語や箱の状態が切り替わる瞬間を見せない） */
+  body.booting main { visibility: hidden; }
 
-  .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-  .app { display: block; text-decoration: none; background: var(--card); border-radius: 16px; padding: 18px;
+  body { background: #12101a; }
+  main { overflow-x: hidden; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+
+  /* ===== 1. 真面目ゾーン ===== */
+  .serious { background: #f7f6f2; color: #1f2430; font-family: 'Inter', 'Noto Sans JP', system-ui, sans-serif; padding: 96px 0 56px; }
+  .serious .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #6b7280; font-weight: 600; }
+  .serious .who { font-size: clamp(34px, 7vw, 52px); font-weight: 700; letter-spacing: -.02em; color: #14213d; margin: 10px 0 6px; line-height: 1.1; }
+  .serious .role { font-size: 16px; font-weight: 600; color: #3b4252; }
+  .serious .summary { color: #3b4252; line-height: 1.85; font-size: 15.5px; margin: 22px 0 0; }
+  .serious .links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+  .serious .links a { text-decoration: none; color: #14213d; font-weight: 600; font-size: 14px; padding: 9px 18px;
+                      border: 1px solid #14213d; border-radius: 6px; transition: background .15s, color .15s; }
+  .serious .links a:hover { background: #14213d; color: #fff; }
+  .serious h2 { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: #6b7280; font-weight: 600;
+                margin: 56px 0 18px; padding-bottom: 10px; border-bottom: 1px solid #dedad2; }
+  .career { list-style: none; margin: 0; padding: 0; }
+  .career li { display: grid; grid-template-columns: 150px 1fr; gap: 4px 20px; padding: 14px 0; border-bottom: 1px solid #ebe8e1; }
+  .career .when { color: #6b7280; font-size: 13.5px; font-variant-numeric: tabular-nums; padding-top: 2px; }
+  .career .what { font-weight: 600; color: #14213d; font-size: 15px; }
+  .career .detail { grid-column: 2; color: #4b5260; font-size: 14px; line-height: 1.7; }
+
+  /* ===== 2. だんだん崩れるゾーン ===== */
+  .interlude { background: linear-gradient(#f7f6f2 0%, #e9e3f2 30%, #6a5f8a 62%, #12101a 100%); padding: 40px 0 120px; text-align: center; }
+  .interlude p { margin: 0 auto 38px; }
+  .il1 { font-family: 'Inter', 'Noto Sans JP', sans-serif; color: #3b4252; font-size: 15px; }
+  .il2 { font-family: 'Inter', 'Noto Sans JP', sans-serif; color: #4b3f6b; font-size: 17px; letter-spacing: .06em; transform: rotate(-.6deg); }
+  .il3 { font-family: 'DotGothic16', monospace; color: #efe9ff; font-size: 26px; transform: rotate(2.5deg); }
+  .il4 { font-family: 'DotGothic16', monospace; color: #ffe066; font-size: clamp(26px, 6vw, 40px); line-height: 1.35;
+         text-shadow: 3px 3px 0 #ff4d6d; animation: wob 2.2s ease-in-out infinite; max-width: 640px; padding: 0 16px; }
+  @keyframes wob { 0%, 100% { transform: rotate(-2deg) scale(1); } 50% { transform: rotate(2deg) scale(1.04); } }
+
+  /* ===== 3. 無駄ゾーン ===== */
+  .fun { background: #12101a; color: var(--fg); padding: 10px 0 60px; }
+  .gift-wrap { text-align: center; }
+  .giftbox { position: relative; width: 150px; height: 150px; border: none; background: none; cursor: pointer; margin-top: 10px; }
+  .giftbox:not(.open) { animation: idle 2.4s infinite; }
+  .giftbox .box { position: absolute; left: 15px; right: 15px; bottom: 0; height: 90px; background: var(--accent); border-radius: 6px; }
+  .giftbox .lid { position: absolute; left: 5px; right: 5px; top: 32px; height: 30px; background: #ff7a93; border-radius: 6px;
+                  z-index: 2; transition: transform .55s cubic-bezier(.3, 1.6, .5, 1); }
+  .giftbox .ribbon { position: absolute; left: 66px; width: 18px; top: 32px; bottom: 0; background: #ffe066; z-index: 3; transition: opacity .3s; }
+  .giftbox .label { position: absolute; left: 0; right: 0; bottom: 26px; z-index: 4; color: #1b1030; font-size: 18px;
+                    background: #ffe066; width: max-content; padding: 0 8px; margin: auto; border-radius: 6px; }
+  .giftbox.open .lid { transform: translate(46px, -70px) rotate(32deg); }
+  .giftbox.open .ribbon { opacity: 0; }
+  @keyframes idle { 0%, 80%, 100% { rotate: 0deg; } 85% { rotate: -6deg; } 90% { rotate: 6deg; } 95% { rotate: -3deg; } }
+  .gift-hint { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+
+  #gift { overflow: hidden; transition: opacity .35s, transform .35s; }
+  #gift.shut { opacity: 0; transform: translateY(-16px) scale(.97); pointer-events: none; }
+  h1.boxname { font-family: 'DotGothic16', monospace; font-size: clamp(36px, 9vw, 60px); margin: 40px 0 0; line-height: 1;
+               color: #ffe066; text-shadow: 4px 4px 0 var(--accent); transform: rotate(-2deg); }
+  .tag { color: var(--muted); margin: 14px 0 28px; line-height: 1.7; }
+  .fun h2 { font-family: 'DotGothic16', monospace; font-size: 22px; margin: 36px 0 14px; }
+  .fun h2 small { color: var(--muted); font-size: 14px; margin-left: 8px; }
+
+  .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .app { display: block; text-decoration: none; background: var(--card); border-radius: 16px; padding: 16px;
          border: 3px solid transparent; transition: transform .15s; }
   .app:hover { transform: rotate(-1.5deg) scale(1.03); border-color: var(--c); }
-  .app .emo { font-size: 44px; }
-  .app .t { font-weight: 800; font-size: 20px; margin-top: 6px; color: var(--c); }
+  .app .emo { font-size: 40px; }
+  .app .t { font-weight: 800; font-size: 19px; margin-top: 6px; color: var(--c); }
   .app .d { color: var(--muted); font-size: 14px; margin-top: 4px; }
 
-  .groove { background: var(--card); border-radius: 16px; padding: 18px; }
-  .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+  .groove { background: var(--card); border-radius: 16px; padding: 16px; }
+  .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
   .trk { border-radius: 12px; padding: 12px; border: 3px solid #3a3450; background: #15121f; text-align: left;
          color: var(--fg); font: inherit; cursor: pointer; min-height: 74px; }
   .trk .n { font-weight: 800; }
@@ -38,122 +96,125 @@
   .btn { font: inherit; font-weight: 800; border: 3px solid var(--fg); background: none; color: var(--fg);
          padding: 8px 16px; border-radius: 10px; cursor: pointer; }
   .btn.big { background: #ffe066; color: #1b1030; border-color: #ffe066; }
+  .btn.cheat { border-style: dashed; border-color: var(--muted); color: var(--muted); font-size: 14px; }
+  .btn.cheat:hover { color: #ff4d6d; border-color: #ff4d6d; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .count { color: var(--muted); font-family: 'DotGothic16', monospace; }
+  .note { color: var(--muted); font-size: 13px; }
 
   details { background: var(--card); border-radius: 16px; padding: 14px 18px; }
   summary { cursor: pointer; font-weight: 800; }
   textarea { width: 100%; height: 70px; margin: 10px 0; background: #0c0a12; color: var(--fg); border: 2px solid #3a3450;
              border-radius: 8px; padding: 8px; font-family: monospace; font-size: 12px; }
-  .note { color: var(--muted); font-size: 13px; }
-  footer { color: var(--muted); font-size: 12px; margin-top: 40px; text-align: center; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 50px; text-align: center; font-family: 'DotGothic16', monospace; }
 
-  /* 自己紹介 */
-  .hero { padding: 40px 0 8px; }
-  .who { font-size: clamp(36px, 8vw, 60px); line-height: 1.05; color: #ffe066; text-shadow: 4px 4px 0 var(--accent); }
-  .role { font-weight: 800; font-size: 18px; margin-top: 12px; }
-  .summary { color: var(--muted); line-height: 1.8; max-width: 640px; }
-  .links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
-  .links a { text-decoration: none; font-weight: 800; padding: 10px 18px; border-radius: 999px;
-             border: 3px solid var(--fg); transition: transform .15s; }
-  .links a:hover { transform: rotate(-3deg) scale(1.05); background: var(--fg); color: var(--bg); }
-  .career { list-style: none; padding: 0; margin: 0; border-left: 3px dashed #3a3450; }
-  .career li { position: relative; padding: 0 0 18px 22px; }
-  .career li::before { content: ''; position: absolute; left: -9px; top: 6px; width: 14px; height: 14px; border-radius: 50%;
-                       background: var(--accent); }
-  .career .when { font-family: 'DotGothic16', monospace; color: var(--muted); font-size: 13px; }
-  .career .what { font-weight: 800; }
-  .career .detail { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  /* 言語切り替え：上の真面目ゾーンに合わせた落ち着いた見た目 */
+  body > .fz-lang { background: #ffffffee; border: 1px solid #dedad2; color: #9ca3af; font-family: 'Inter', sans-serif; font-size: 13px; }
+  body > .fz-lang .on { color: #14213d; font-weight: 700; }
 
-  /* お礼の箱 */
-  .gift-wrap { text-align: center; margin: 60px 0 20px; }
-  .gift-title { font-size: clamp(24px, 5vw, 34px); line-height: 1.4; }
-  .giftbox { position: relative; width: 150px; height: 140px; border: none; background: none; cursor: pointer;
-             animation: idle 2.4s infinite; }
-  .giftbox .box { position: absolute; left: 15px; right: 15px; bottom: 0; height: 90px; background: var(--accent); border-radius: 6px; }
-  .giftbox .lid { position: absolute; left: 5px; right: 5px; top: 22px; height: 30px; background: #ff7a93; border-radius: 6px;
-                  z-index: 2; transition: transform .6s cubic-bezier(.3, 1.6, .5, 1); }
-  .giftbox .ribbon { position: absolute; left: 66px; width: 18px; top: 22px; bottom: 0; background: #ffe066; z-index: 3; }
-  .giftbox .label { position: absolute; left: 0; right: 0; bottom: 26px; z-index: 4; color: #1b1030; font-size: 22px;
-                    background: #ffe066; width: max-content; padding: 0 8px; margin: auto; border-radius: 6px; }
-  .giftbox.open { animation: none; }
-  .giftbox.open .lid, .giftbox.open .ribbon { transform: translate(40px, -90px) rotate(35deg); }
-  .giftbox.open .ribbon { opacity: 0; transition: .4s; }
-  @keyframes idle { 0%, 80%, 100% { rotate: 0deg; } 85% { rotate: -6deg; } 90% { rotate: 6deg; } 95% { rotate: -3deg; } }
-  #gift { animation: drop .6s; }
-  @keyframes drop { from { opacity: 0; transform: translateY(-20px); } }
+  /* スマホ */
+  @media (max-width: 560px) {
+    .serious { padding-top: 76px; }
+    .career li { grid-template-columns: 1fr; }
+    .career .detail { grid-column: 1; }
+    .interlude { padding-bottom: 90px; }
+    .giftbox .lid { }
+  }
 </style>
 </head>
-<body>
+<body class="booting">
 <main>
-  <!-- ===== 自己紹介（中身は /data/profile.json） ===== -->
-  <section class="hero">
-    <div class="who pixel" id="pname"></div>
-    <div class="role" id="prole"></div>
-    <p class="summary" id="psummary"></p>
-    <div class="links" id="plinks"></div>
+  <!-- ===== 1. 真面目ゾーン（中身は /data/profile.json） ===== -->
+  <section class="serious">
+    <div class="wrap">
+      <div class="eyebrow" data-i18n="eyebrow"></div>
+      <div class="who" id="pname"></div>
+      <div class="role" id="prole"></div>
+      <p class="summary" id="psummary"></p>
+      <div class="links" id="plinks"></div>
+
+      <h2 data-i18n="career"></h2>
+      <ol class="career" id="pcareer"></ol>
+    </div>
   </section>
 
-  <h2><span data-i18n="career"></span> <small data-i18n="careerSub"></small></h2>
-  <ol class="career" id="pcareer"></ol>
-
-  <!-- ===== 訪問のお礼 ===== -->
-  <section class="gift-wrap">
-    <h2 class="gift-title" data-i18n-html="giftTitle"></h2>
-    <button class="giftbox" id="giftbox">
-      <span class="lid"></span><span class="box"></span><span class="ribbon"></span>
-      <span class="label pixel" data-i18n="giftLabel"></span>
-    </button>
-    <p class="note" id="gifthint" data-i18n="giftHint"></p>
+  <!-- ===== 2. だんだん崩れる ===== -->
+  <section class="interlude">
+    <div class="wrap">
+      <p class="il1" data-i18n="il1"></p>
+      <p class="il2" data-i18n="il2"></p>
+      <p class="il3" data-i18n="il3"></p>
+      <p class="il4" data-i18n="il4"></p>
+    </div>
   </section>
 
-  <div id="gift" hidden>
-  <h1 data-i18n="boxName"></h1>
-  <p class="tag" data-i18n="tagline"></p>
+  <!-- ===== 3. 無駄 ===== -->
+  <section class="fun">
+    <div class="wrap">
+      <div class="gift-wrap">
+        <button class="giftbox" id="giftbox">
+          <span class="lid"></span><span class="box"></span><span class="ribbon"></span>
+          <span class="label pixel" data-i18n="giftLabel"></span>
+        </button>
+        <p class="gift-hint" id="gifthint"></p>
+      </div>
 
-  <h2><span data-i18n="apps"></span> <small data-i18n="appsSub"></small></h2>
-  <div class="apps" id="apps"></div>
+      <div id="gift">
+        <h1 class="boxname" data-i18n="boxName"></h1>
+        <p class="tag" data-i18n="tagline"></p>
 
-  <h2><span data-i18n="groove"></span> <small id="count" class="count"></small></h2>
-  <div class="groove" id="groove">
-    <div class="row">
-      <button class="btn big" id="play"></button>
-      <span class="note" data-i18n="grooveNote"></span>
+        <h2><span data-i18n="apps"></span> <small data-i18n="appsSub"></small></h2>
+        <div class="apps" id="apps"></div>
+
+        <h2><span data-i18n="groove"></span> <small id="count" class="count"></small></h2>
+        <div class="groove" id="groove">
+          <div class="row">
+            <button class="btn big" id="play"></button>
+            <button class="btn cheat" id="cheat"></button>
+          </div>
+          <p class="note" data-i18n="grooveNote"></p>
+          <div class="tracks" id="tracks"></div>
+        </div>
+
+        <h2><span data-i18n="save"></span> <small data-i18n="saveSub"></small></h2>
+        <details>
+          <summary data-i18n="saveSummary"></summary>
+          <p class="note" data-i18n="saveNote"></p>
+          <div class="row">
+            <button class="btn" id="exp" data-i18n="exp"></button>
+            <button class="btn" id="imp" data-i18n="imp"></button>
+            <button class="btn" id="rst" data-i18n="rst"></button>
+          </div>
+          <textarea id="code"></textarea>
+          <div class="note" id="msg"></div>
+        </details>
+      </div>
+
+      <footer data-i18n="footer"></footer>
     </div>
-    <div class="tracks" id="tracks"></div>
-  </div>
-
-  <h2><span data-i18n="save"></span> <small data-i18n="saveSub"></small></h2>
-  <details>
-    <summary data-i18n="saveSummary"></summary>
-    <p class="note" data-i18n="saveNote"></p>
-    <div class="row">
-      <button class="btn" id="exp" data-i18n="exp"></button>
-      <button class="btn" id="imp" data-i18n="imp"></button>
-      <button class="btn" id="rst" data-i18n="rst"></button>
-    </div>
-    <textarea id="code"></textarea>
-    <div class="note" id="msg"></div>
-  </details>
-  </div>
-
-  <footer class="pixel" data-i18n="footer"></footer>
+  </section>
 </main>
 
-<script src="/core/core.js?v=4"></script>
+<script src="/core/core.js?v=5"></script>
 <script>
 const T = {
   en: {
-    career: 'Career', careerSub: 'in short',
-    giftTitle: 'As thanks for visiting,<br>please accept some uselessness.',
-    giftLabel: 'USELESS', giftHint: 'Tap to receive (no returns)', giftAria: 'Receive the uselessness',
-    giftOpened: 'Congratulations. It is useless.', giftAgain: 'Thanks for coming back. Still useless.',
+    eyebrow: 'Profile', career: 'Career',
+    il1: 'That concludes the professional part.',
+    il2: 'Thank you very much for your time.',
+    il3: 'And now,',
+    il4: 'as thanks for visiting, please accept some uselessness.',
+    giftLabel: 'USELESS',
+    hintClosed: 'Tap to open (no returns)', hintOpen: 'Congratulations. It is useless. Tap again to close.',
+    hintReclosed: 'Closed. The uselessness is resting. Tap to open again.',
+    giftAriaOpen: 'Open the box of uselessness', giftAriaClose: 'Close the box',
     boxName: 'FUZAKE BOX',
     tagline: 'A button that does nothing, natto, and the void. Play them to collect sounds, which slowly turn into a groove.',
     apps: 'Apps', appsSub: 'none of them mean anything',
     groove: 'Groove Machine', sounds: 'sounds',
     grooveNote: 'Tap collected sounds to toggle them. Everything is 120 BPM, so it just fits.',
-    play: '▶ Play', stop: '■ Stop', loading: '…loading', noSounds: 'No sounds yet. Go play the apps.',
+    play: '▶ Play', stop: '■ Stop', loading: '…loading', noSounds: 'No sounds yet. Play the apps (or cheat).',
+    cheat: '🔓 Unlock everything', cheated: 'Everything unlocked. Cheater.', allDone: 'Already all unlocked.',
     locked: '???',
     save: 'Save', saveSub: 'for moving devices or lost data',
     saveSummary: 'Show / load a save code',
@@ -164,16 +225,22 @@ const T = {
     footer: 'FUZAKE BOX / 2026 / seriously made, not serious',
   },
   ja: {
-    career: 'キャリア', careerSub: 'ざっくり',
-    giftTitle: 'ご来訪のお礼に、<br>無駄をどうぞ。',
-    giftLabel: '無駄', giftHint: 'タップして受け取る（返品不可）', giftAria: '無駄を受け取る',
-    giftOpened: 'おめでとうございます。無駄です。', giftAgain: 'またのご来訪ありがとうございます。無駄です。',
+    eyebrow: 'Profile', career: 'Career',
+    il1: '以上、真面目なご紹介でした。',
+    il2: 'お時間をいただき、誠にありがとうございました。',
+    il3: 'さて、',
+    il4: 'ご来訪のお礼に、無駄をどうぞ。',
+    giftLabel: '無駄',
+    hintClosed: 'タップして受け取る（返品不可）', hintOpen: 'おめでとうございます。無駄です。もう一度タップで閉じます。',
+    hintReclosed: '閉じました。無駄は休んでいます。タップでまた開きます。',
+    giftAriaOpen: '無駄の箱を開ける', giftAriaClose: '箱を閉じる',
     boxName: 'ふざけ箱',
     tagline: '押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまって、だんだんグルーヴになる。',
     apps: 'アプリ', appsSub: 'どれも意味はない',
     groove: 'グルーヴ機', sounds: '音源',
     grooveNote: '集めた音源をタップでON/OFF。全部120BPMで勝手に合う。',
-    play: '▶ 鳴らす', stop: '■ 止める', loading: '…読み込み中', noSounds: 'まだ音源がない。アプリで遊べ',
+    play: '▶ 鳴らす', stop: '■ 止める', loading: '…読み込み中', noSounds: 'まだ音源がない。アプリで遊べ（またはズルしろ）',
+    cheat: '🔓 全部解放する', cheated: '全部解放しました。ズルです。', allDone: 'もう全部解放済みです。',
     locked: '？？？',
     save: 'セーブ', saveSub: '引っ越し・消えたとき用',
     saveSummary: 'セーブコードを出す / 読み込む',
@@ -184,94 +251,134 @@ const T = {
     footer: 'ふざけ箱 / 2026 / 真面目に作られた不真面目',
   },
 };
-const L = FZ.apply(T);
 const t = FZ.t;
+let L = FZ.apply(T);
 FZ.langToggle();
-document.getElementById('giftbox').setAttribute('aria-label', L.giftAria);
-document.getElementById('code').placeholder = L.codePh;
 
 (async function () {
-  // ---- 自己紹介 ----
-  const p = await fetch('/data/profile.json?v=' + FZ.V).then(r => r.json());
-  document.title = p.name + ' | ' + L.boxName;
-  document.getElementById('pname').textContent = t(p.name);
-  document.getElementById('prole').textContent = t(p.role);
-  document.getElementById('psummary').textContent = t(p.summary);
-  const linksEl = document.getElementById('plinks');
-  for (const l of p.links.filter(l => l.url)) {
-    const a = document.createElement('a');
-    a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t(l.label);
-    linksEl.appendChild(a);
-  }
-  const careerEl = document.getElementById('pcareer');
-  for (const c of p.career) {
-    const li = document.createElement('li');
-    li.innerHTML = '<div class="when"></div><div class="what"></div><div class="detail"></div>';
-    li.querySelector('.when').textContent = t(c.when);
-    li.querySelector('.what').textContent = t(c.what);
-    li.querySelector('.detail').textContent = t(c.detail) || '';
-    careerEl.appendChild(li);
-  }
+  const [p, apps, rules] = await Promise.all([
+    fetch('/data/profile.json?v=' + FZ.V).then(r => r.json()),
+    fetch('/data/apps.json?v=' + FZ.V).then(r => r.json()),
+    FZ.rules(),
+  ]);
 
-  // ---- お礼の箱：一度開けた人には最初から中身を見せる ----
-  const giftEl = document.getElementById('gift'), box = document.getElementById('giftbox');
-  function openGift(first) {
-    box.classList.add('open');
-    giftEl.hidden = false;
-    document.getElementById('gifthint').textContent = first ? L.giftOpened : L.giftAgain;
-    if (first) setTimeout(() => giftEl.scrollIntoView({ behavior: 'smooth' }), 500);
-  }
-  if (FZ.stat('top', 'gifts') > 0) openGift(false);
-  box.onclick = () => { if (!box.classList.contains('open')) { FZ.add('top', 'gifts', 1); openGift(true); } };
-
-  // ---- アプリ一覧 ----
-  const apps = await fetch('/data/apps.json?v=' + FZ.V).then(r => r.json());
-  const appsEl = document.getElementById('apps');
-  for (const a of apps) {
-    const el = document.createElement('a');
-    el.className = 'app';
-    el.href = '/apps/' + a.id + '/';
-    el.style.setProperty('--c', a.color);
-    el.innerHTML = '<div class="emo"></div><div class="t"></div><div class="d"></div>';
-    el.querySelector('.emo').textContent = a.emoji;
-    el.querySelector('.t').textContent = t(a.title);
-    el.querySelector('.d').textContent = t(a.desc);
-    appsEl.appendChild(el);
-  }
-
-  // ---- グルーヴ機 ----
-  const rules = await FZ.rules();
-  const unlocked = new Set(FZ.unlocked());
-  document.getElementById('count').textContent = unlocked.size + ' / ' + rules.length + ' ' + L.sounds;
-
-  const tracksEl = document.getElementById('tracks');
-  const on = new Set([...unlocked]);  // 解放済みは最初から全部ON
+  // ---------- 状態 ----------
+  let unlocked = new Set(FZ.unlocked());
+  let on = new Set(unlocked);            // 解放済みは最初から全部ON
   let ctx = null, buffers = {}, gains = {}, sources = [];
+  let playing = false;
+  // 箱：初回は閉じた状態。以降は前回の開閉状態を覚えておく（boxOpen: 1=開, 2=閉じた）
+  let boxState = FZ.stat('top', 'boxOpen');   // 0=未開封
 
-  for (const r of rules) {
-    const b = document.createElement('button');
-    const has = unlocked.has(r.id);
-    b.className = 'trk' + (has ? ' on' : ' locked');
-    b.innerHTML = '<div class="n"></div><div class="h"></div>';
-    b.querySelector('.n').textContent = has ? t(r.name) : L.locked;
-    b.querySelector('.h').textContent = has ? '' : t(r.hint);
-    if (has) b.onclick = () => {
-      on.has(r.id) ? on.delete(r.id) : on.add(r.id);
-      b.classList.toggle('on', on.has(r.id));
-      if (gains[r.id]) gains[r.id].gain.setTargetAtTime(on.has(r.id) ? 1 : 0, ctx.currentTime, 0.02);
-    };
-    tracksEl.appendChild(b);
+  const $ = id => document.getElementById(id);
+  const giftEl = $('gift'), box = $('giftbox'), hint = $('gifthint');
+
+  // ---------- 描画（言語切り替え時も呼ぶ） ----------
+  function renderProfile() {
+    document.title = p.name + (FZ.lang() === 'ja' ? ' | ふざけ箱' : ' | FUZAKE BOX');
+    $('pname').textContent = t(p.name);
+    $('prole').textContent = t(p.role);
+    $('psummary').textContent = t(p.summary);
+    const linksEl = $('plinks');
+    linksEl.textContent = '';
+    for (const l of p.links) {
+      if (!l.url || (l.only && l.only !== FZ.lang())) continue;
+      const a = document.createElement('a');
+      a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t(l.label);
+      linksEl.appendChild(a);
+    }
+    const careerEl = $('pcareer');
+    careerEl.textContent = '';
+    for (const c of p.career) {
+      const li = document.createElement('li');
+      li.innerHTML = '<div class="when"></div><div class="what"></div><div class="detail"></div>';
+      li.querySelector('.when').textContent = t(c.when);
+      li.querySelector('.what').textContent = t(c.what);
+      li.querySelector('.detail').textContent = t(c.detail) || '';
+      careerEl.appendChild(li);
+    }
+  }
+  function renderApps() {
+    const el = $('apps');
+    el.textContent = '';
+    for (const a of apps) {
+      const card = document.createElement('a');
+      card.className = 'app';
+      card.href = '/apps/' + a.id + '/';
+      card.style.setProperty('--c', a.color);
+      card.innerHTML = '<div class="emo"></div><div class="t"></div><div class="d"></div>';
+      card.querySelector('.emo').textContent = a.emoji;
+      card.querySelector('.t').textContent = t(a.title);
+      card.querySelector('.d').textContent = t(a.desc);
+      el.appendChild(card);
+    }
+  }
+  function renderTracks() {
+    $('count').textContent = unlocked.size + ' / ' + rules.length + ' ' + L.sounds;
+    const el = $('tracks');
+    el.textContent = '';
+    for (const r of rules) {
+      const b = document.createElement('button');
+      const has = unlocked.has(r.id);
+      b.className = 'trk' + (has ? (on.has(r.id) ? ' on' : '') : ' locked');
+      b.innerHTML = '<div class="n"></div><div class="h"></div>';
+      b.querySelector('.n').textContent = has ? t(r.name) : L.locked;
+      b.querySelector('.h').textContent = has ? '' : t(r.hint);
+      if (has) b.onclick = () => {
+        on.has(r.id) ? on.delete(r.id) : on.add(r.id);
+        b.classList.toggle('on', on.has(r.id));
+        if (gains[r.id]) gains[r.id].gain.setTargetAtTime(on.has(r.id) ? 1 : 0, ctx.currentTime, 0.02);
+      };
+      el.appendChild(b);
+    }
+    $('play').textContent = playing ? L.stop : L.play;
+    $('cheat').textContent = L.cheat;
+  }
+  function renderBox() {
+    const isOpen = boxState === 1;
+    box.classList.toggle('open', isOpen);
+    giftEl.classList.toggle('shut', !isOpen);
+    giftEl.hidden = !isOpen;
+    box.setAttribute('aria-label', isOpen ? L.giftAriaClose : L.giftAriaOpen);
+    box.setAttribute('aria-expanded', String(isOpen));
+    hint.textContent = isOpen ? L.hintOpen : boxState === 2 ? L.hintReclosed : L.hintClosed;
+  }
+  function renderAll() {
+    $('code').placeholder = L.codePh;
+    renderProfile(); renderApps(); renderTracks(); renderBox();
   }
 
-  const playBtn = document.getElementById('play');
-  const groove = document.getElementById('groove');
-  playBtn.textContent = L.play;
-  playBtn.onclick = async () => {
-    if (sources.length) { stop(); return; }
-    if (!unlocked.size) { playBtn.textContent = L.noSounds; return; }
+  renderAll();
+  document.body.classList.remove('booting');   // ここで初めて見せる
+  FZ.onLang(() => { L = T[FZ.lang()]; renderAll(); });
+
+  // ---------- 箱の開け閉め ----------
+  box.onclick = () => {
+    if (boxState === 1) {
+      boxState = 2;
+      FZ.set('top', 'boxOpen', 2);
+      if (playing) stop();
+      giftEl.classList.add('shut');
+      box.classList.remove('open');
+      setTimeout(renderBox, 350);       // フェードアウトしてから隠す
+    } else {
+      boxState = 1;
+      FZ.set('top', 'boxOpen', 1);
+      FZ.add('top', 'gifts', 1);
+      giftEl.hidden = false;
+      giftEl.classList.add('shut');
+      requestAnimationFrame(() => requestAnimationFrame(renderBox));   // 一拍おいてフェードイン
+      setTimeout(() => giftEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 450);
+    }
+  };
+
+  // ---------- グルーヴ機 ----------
+  $('play').onclick = async () => {
+    if (playing) { stop(); return; }
+    if (!unlocked.size) { $('play').textContent = L.noSounds; return; }
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
     await ctx.resume();
-    playBtn.textContent = L.loading;
+    $('play').textContent = L.loading;
     const list = rules.filter(r => unlocked.has(r.id));
     await Promise.all(list.map(async r => {
       if (!buffers[r.id]) {
@@ -291,30 +398,39 @@ document.getElementById('code').placeholder = L.codePh;
       gains[r.id] = g;
       sources.push(src);
     }
-    groove.classList.add('playing');
-    playBtn.textContent = L.stop;
+    playing = true;
+    $('groove').classList.add('playing');
+    $('play').textContent = L.stop;
   };
   function stop() {
     sources.forEach(s => s.stop());
     sources = []; gains = {};
-    groove.classList.remove('playing');
-    playBtn.textContent = L.play;
+    playing = false;
+    $('groove').classList.remove('playing');
+    $('play').textContent = L.play;
   }
 
-  // ---- セーブコード ----
-  const code = document.getElementById('code'), msg = document.getElementById('msg');
-  document.getElementById('exp').onclick = () => {
-    code.value = FZ.exportCode();
-    code.select();
-    msg.textContent = L.copied;
+  // ---------- 全部解放（ズル） ----------
+  $('cheat').onclick = async () => {
+    if (unlocked.size === rules.length) { $('cheat').textContent = L.allDone; return; }
+    const was = playing;
+    if (was) stop();
+    await FZ.unlockAll();
+    unlocked = new Set(FZ.unlocked());
+    on = new Set(unlocked);
+    renderTracks();
+    $('cheat').textContent = L.cheated;
+    if (was) $('play').click();
   };
-  document.getElementById('imp').onclick = () => {
+
+  // ---------- セーブコード ----------
+  const code = $('code'), msg = $('msg');
+  $('exp').onclick = () => { code.value = FZ.exportCode(); code.select(); msg.textContent = L.copied; };
+  $('imp').onclick = () => {
     try { FZ.importCode(code.value); msg.textContent = L.loaded; setTimeout(() => location.reload(), 600); }
     catch (e) { msg.textContent = e.message; }
   };
-  document.getElementById('rst').onclick = () => {
-    if (confirm(L.confirmReset)) { FZ.reset(); location.reload(); }
-  };
+  $('rst').onclick = () => { if (confirm(L.confirmReset)) { FZ.reset(); location.reload(); } };
 })();
 </script>
 </body>

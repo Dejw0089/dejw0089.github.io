@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Void Timer — FUZAKE BOX</title>
-<link rel="stylesheet" href="/core/core.css?v=4">
+<link rel="stylesheet" href="/core/core.css?v=5">
 <style>
   body { display: grid; place-items: center; text-align: center; transition: background 2s; user-select: none; }
   body.void { background: #000; }
@@ -24,7 +24,7 @@
   <button id="start" data-i18n="start"></button>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=4"></script>
+<script src="/core/core.js?v=5"></script>
 <script>
 const APP = 'kyomu';
 const T = {
@@ -49,8 +49,9 @@ const T = {
     moved: '動きましたね', touched: '触りましたね', key: 'キーを押しましたね', wheel: 'スクロールしましたね', away: 'よそ見しましたね',
   },
 };
-const L = FZ.apply(T);
-document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX');
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' — ' + (FZ.lang() === 'ja' ? 'ふざけ箱' : 'FUZAKE BOX'); }
+setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const timeEl = document.getElementById('time'), say = document.getElementById('say'), rec = document.getElementById('rec'), start = document.getElementById('start');
@@ -90,6 +91,7 @@ addEventListener('pointerdown', () => fail(L.touched));
 addEventListener('keydown', () => fail(L.key));
 addEventListener('wheel', () => fail(L.wheel));
 document.addEventListener('visibilitychange', () => { if (document.hidden) fail(L.away); });
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); showRec(); if (!armed) start.textContent = L.start; });
 </script>
 </body>
 </html>

@@ -8,7 +8,7 @@
  */
 (function () {
   // 更新したらここと各HTMLの ?v= を上げる（GitHub Pagesのキャッシュ対策）
-  const V = '4';
+  const V = '5';
   const KEY = 'fuzake-box-v1';
   const blank = () => ({ v: 1, stats: {}, unlocked: [], since: Date.now() });
 
@@ -62,28 +62,50 @@
   let lang = 'en';
   try { if (localStorage.getItem(LKEY) === 'ja') lang = 'ja'; } catch (e) {}
   document.documentElement.lang = lang;
+  // 切り替えはリロードせずその場で書き換える（ページは FZ.onLang で再描画を登録する）
+  let dictRef = null;
+  const langListeners = [];
+  const toggles = [];
   function setLang(l) {
+    if (l === lang) return;
+    lang = l;
     try { localStorage.setItem(LKEY, l); } catch (e) {}
-    location.reload();
+    document.documentElement.lang = lang;
+    if (dictRef) apply(dictRef);
+    toggles.forEach(paintToggle);
+    langListeners.forEach(fn => fn(lang));
   }
+  function onLang(fn) { langListeners.push(fn); }
   // {en: '...', ja: '...'} から今の言語を取り出す。ただの文字列ならそのまま
   function t(v) { return v && typeof v === 'object' ? (v[lang] ?? v.en) : v; }
   // data-i18n="key"（テキスト）/ data-i18n-html="key"（改行入り）に辞書の文言を入れる
   function apply(dict) {
+    dictRef = dict;
     const d = dict[lang] || dict.en;
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = d[el.dataset.i18n]; });
     document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = d[el.dataset.i18nHtml]; });
     return d;
   }
   // 右上の EN / JA 切り替え
+  function paintToggle(b) {
+    b.innerHTML = '<span' + (lang === 'en' ? ' class="on"' : '') + '>EN</span> / <span' + (lang === 'ja' ? ' class="on"' : '') + '>JA</span>';
+    b.setAttribute('aria-label', lang === 'en' ? '日本語に切り替え' : 'Switch to English');
+  }
   function langToggle(parent) {
     const b = document.createElement('button');
     b.className = 'fz-lang';
-    b.innerHTML = '<span' + (lang === 'en' ? ' class="on"' : '') + '>EN</span> / <span' + (lang === 'ja' ? ' class="on"' : '') + '>JA</span>';
-    b.setAttribute('aria-label', lang === 'en' ? '日本語に切り替え' : 'Switch to English');
+    paintToggle(b);
     b.onclick = () => setLang(lang === 'en' ? 'ja' : 'en');
     (parent || document.body).appendChild(b);
+    toggles.push(b);
     return b;
+  }
+
+  // 全音源を一気に解放（ズル用）。解放演出は出さない
+  async function unlockAll() {
+    const rs = await rulesReady;
+    for (const r of rs) if (!state.unlocked.includes(r.id)) state.unlocked.push(r.id);
+    save();
   }
 
   // ---- 解放演出 ----
@@ -122,10 +144,11 @@
   function reset() { state = blank(); save(); }
 
   window.FZ = {
-    add, max, stat,
+    add, max, stat, set,
     unlocked: () => state.unlocked.slice(),
     rules: () => rulesReady,
+    unlockAll,
     exportCode, importCode, reset,
-    lang: () => lang, setLang, t, apply, langToggle, V,
+    lang: () => lang, setLang, onLang, t, apply, langToggle, V,
   };
 })();
