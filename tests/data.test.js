@@ -124,11 +124,11 @@ describe('expanded line-up', () => {
   test('a maximum number of simultaneous sounds is set', () => {
     expect(unlocks.maxOn).toBe(6);
   });
-  test('each tempo has 3 recommended presets of real sounds from that tempo, within the limit', () => {
+  test('each tempo has 6 recommended presets of real sounds from that tempo, within the limit', () => {
     const byId = Object.fromEntries(sounds.map(s => [s.id, s]));
     for (const bpm of TEMPOS) {
       const ps = unlocks.presets.filter(p => p.bpm === bpm);
-      expect(ps.length).toBe(3);
+      expect(ps.length).toBe(6);
       for (const p of ps) {
         expect(p.name.en).toBeTruthy();
         expect(p.name.ja).toBeTruthy();
@@ -205,6 +205,39 @@ describe('doubled sounds', () => {
     for (const t of onsets(path.join(ROOT, s.file), { quiet: 0.05 })) {   // 持続音の揺れは数えない
       const off = t % grid;
       expect(Math.min(off, grid - off)).toBeLessThan(0.01);                // 10ms は聞き分けられない
+    }
+  });
+});
+
+describe('bass and presets', () => {
+  const { readWav } = require('./helpers/wav');
+  const unlocks = readJSON('data/unlocks.json');
+  // 低音の割合：150Hz より下のエネルギー / 全体（1次ローパスで素朴に）
+  function lowShare(file) {
+    const { sr, samples } = readWav(file);
+    const a = 1 - Math.exp(-2 * Math.PI * 150 / sr);
+    let y = 0, lo = 0, all = 0;
+    for (const x of samples) { y += a * (x - y); lo += y * y; all += x * x; }
+    return lo / all;
+  }
+  test('at least a quarter of every tempo is bass', () => {
+    for (const bpm of TEMPOS) {
+      const set = sounds.filter(s => s.bpm === bpm);
+      expect(set.filter(s => s.bass).length / set.length).toBeGreaterThanOrEqual(0.25);
+    }
+  });
+  test.each(sounds.filter(s => s.bass).map(s => [s.id, s]))('%s really is mostly low end', (id, s) => {
+    expect(lowShare(path.join(ROOT, s.file))).toBeGreaterThan(0.3);
+  });
+  test('every preset has a bass, no two presets in a tempo are the same, and together they use every sound', () => {
+    const byId = Object.fromEntries(sounds.map(s => [s.id, s]));
+    for (const bpm of TEMPOS) {
+      const ps = unlocks.presets.filter(p => p.bpm === bpm);
+      for (const p of ps) expect(p.sounds.some(id => byId[id].bass)).toBe(true);
+      const keys = ps.map(p => [...p.sounds].sort().join(','));
+      expect(new Set(keys).size).toBe(keys.length);
+      const used = new Set(ps.flatMap(p => p.sounds));
+      for (const s of sounds.filter(x => x.bpm === bpm)) expect(used.has(s.id)).toBe(true);
     }
   });
 });

@@ -8,7 +8,7 @@
  */
 (function () {
   // 更新したらここと各HTMLの ?v= を上げる（GitHub Pagesのキャッシュ対策）
-  const V = '9';
+  const V = '10';
   const KEY = 'fuzake-box-v1';
   const blank = () => ({ v: 1, stats: {}, unlocked: [], since: Date.now() });
 

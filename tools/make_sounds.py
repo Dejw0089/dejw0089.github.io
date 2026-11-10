@@ -1001,7 +1001,7 @@ def y120_boom():
 
 save("rim.wav", y120_rim(), 0.4)
 save("conga.wav", y120_conga(), 0.5)
-save("tamb.wav", y120_tamb(), 0.3)
+y120_tamb()      # ベースに差し替え済み。乱数の並びを保つために呼ぶだけ
 save("cowbell.wav", y120_cowbell(), 0.35)
 save("epiano.wav", y120_epiano(), 0.4)
 save("bounce.wav", y120_bounce(), 0.5)
@@ -1009,7 +1009,7 @@ save("strings.wav", y120_strings(), 0.35)
 save("whistle.wav", y120_whistle(), 0.3)
 save("vibes.wav", y120_vibes(), 0.35)
 save("scratch.wav", y120_scratch(), 0.4)
-save("snap.wav", y120_snap(), 0.45)
+y120_snap()      # 同上
 save("boom.wav", y120_boom(), 0.7)
 
 
@@ -1120,13 +1120,13 @@ def y180_vchop():
 
 
 save("break2.wav", y180_break2(), 0.85)
-save("shaker.wav", y180_shaker(), 0.3)
+y180_shaker()    # 同上
 save("reese2.wav", y180_reese2(), 0.5)
 save("piano.wav", y180_piano(), 0.4)
 save("pad2.wav", y180_pad2(), 0.35)
 save("arp.wav", y180_arp(), 0.3)
 save("siren.wav", y180_siren(), 0.3)
-save("tom.wav", y180_tom(), 0.5)
+y180_tom()       # 同上
 save("hoover.wav", y180_hoover(), 0.4)
 save("vchop.wav", y180_vchop(), 0.45)
 
@@ -1230,11 +1230,11 @@ save("stomp.wav", y400_stomp(), 0.55)
 save("clap.wav", y400_clap(), 0.5)
 save("hoover2.wav", y400_hoover2(), 0.4)
 save("piano.wav", y400_piano(), 0.35)
-save("crash.wav", y400_crash(), 0.3)
+y400_crash()     # 同上
 save("acid.wav", y400_acid(), 0.4)
-save("stabs.wav", y400_stabs(), 0.35)
+y400_stabs()     # 同上
 save("supersaw.wav", y400_supersaw(), 0.35)
-save("ride.wav", y400_ride(), 0.3)
+y400_ride()      # 同上
 save("vox.wav", y400_vox(), 0.45)
 
 
@@ -1348,9 +1348,160 @@ save("melody2.wav", y1280_melody2(), 0.25)
 save("kick2.wav", y1280_kick2(), 0.45)
 save("chords.wav", y1280_chords(), 0.3)
 save("bell2.wav", y1280_bell2(), 0.35)
-save("snare.wav", y1280_snare(), 0.3)
+y1280_snare()    # 同上
 save("arp2.wav", y1280_arp2(), 0.2)
 save("bass2.wav", y1280_bass2(), 0.35)
 save("coin.wav", y1280_coin(), 0.25)
 save("pad.wav", y1280_pad(), 0.25)
-save("ticks.wav", y1280_ticks(), 0.25)
+y1280_ticks()    # 同上
+
+
+# =====================================================================
+# ベース増量（重なりの多かった打楽器系9つと差し替え）。各テンポのベースが約25%になる
+# =====================================================================
+
+def pluck_bass(f, n, decay=0.25, cut=500):
+    x = t(n)
+    sig = np.sin(osc(f, n)) + 0.35 * triangle(osc(f * 2, n))
+    return lowpass(sig, cut) * env(n, 0.003, decay) * np.minimum(1, (x[-1] - x) / 0.006)
+
+
+# ---------------- 120 BPM（Cマイナー）----------------
+setup(120, 8, "120")
+rng = np.random.default_rng(1203)
+
+
+def b120_walk():          # 4分音符で歩くウッドベース風
+    buf = np.zeros(LEN)
+    line = [36, 39, 43, 46, 34, 38, 41, 45]
+    n = int(SR * BEAT * 0.95)
+    for i, m in enumerate(line):
+        place(buf, pluck_bass(note(m), n, 0.3, 600), i)
+    return buf
+
+
+def b120_funk():          # 16分で跳ねるシンセベース
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.22)
+    x = t(n)
+    hits = "X..xX.x...X.x..x" "X..xX.x...X..xX."
+    for i, ch in enumerate(hits):
+        if ch == '.':
+            continue
+        m = (36 if i < 16 else 34) + (12 if ch == 'x' else 0)
+        sig = lowpass4(np.sign(np.sin(osc(note(m), n))), 300 + 1500 * np.exp(-x * 40))
+        place(buf, sig * np.minimum(1, (x[-1] - x) / 0.004) * (1.0 if ch == 'X' else 0.7), i * 0.25)
+    return buf
+
+
+save("walk.wav", b120_walk(), 0.6)
+save("funk.wav", b120_funk(), 0.55)
+
+
+# ---------------- 180 BPM（Fマイナー）----------------
+setup(180, 16, "180")
+rng = np.random.default_rng(1803)
+
+
+def b180_glide():         # 2拍ごとに音をすべらせるサブベース
+    x = t(LEN)
+    roots = [29, 29, 32, 31, 25, 25, 24, 27]
+    seg = np.minimum(7, (x / (BEAT * 2)).astype(int))
+    f = np.array([note(r) for r in roots])[seg]
+    f = lowpass(lowpass(f, 12), 12)                 # 音程がなめらかにすべる
+    sig = np.sin(osc(f, LEN)) + 0.15 * np.sin(osc(f * 2, LEN))
+    return sig
+
+
+def b180_growl():         # 8分でうなる中域ベース
+    buf = np.zeros(LEN)
+    line = [29, 29, 41, 29, 32, 29, 44, 29, 25, 25, 37, 25, 24, 27, 31, 24]
+    n = int(SR * BEAT * 0.95)
+    x = t(n)
+    for i, m in enumerate(line):
+        f = note(m)
+        wob = 0.5 + 0.5 * np.sin(2 * np.pi * x / (BEAT / 2) - np.pi / 2)
+        sig = lowpass4(saw(osc(f, n)) + saw(osc(f * 1.007, n)), 120 + 900 * wob)
+        sub = np.sin(osc(f, n))
+        place_wrap(buf, (drive(sig * 1.4, 1.5) * 0.6 + sub) * np.minimum(1, np.minimum(x / 0.004, (x[-1] - x) / 0.01)), i)
+    return buf
+
+
+save("glide.wav", b180_glide(), 0.6)
+save("growl.wav", b180_growl(), 0.5)
+
+
+# ---------------- 400 BPM（Cマイナー）----------------
+setup(400, 16, "400")
+rng = np.random.default_rng(4003)
+
+
+def b400_offbass():       # 裏拍で鳴る歪んだベース
+    buf = np.zeros(LEN)
+    roots = [36, 36, 32, 34]
+    n = int(SR * BEAT * 0.45)
+    x = t(n)
+    for b in range(16):
+        f = note(roots[b // 4])
+        sig = drive(lowpass(saw(osc(f, n)), 500) * 2.5, 2) * np.minimum(1, np.minimum(x / 0.002, (x[-1] - x) / 0.004))
+        place(buf, sig, b + 0.5)
+    return buf
+
+
+def b400_subdrop():       # 4拍ごとに落ちる808
+    buf = np.zeros(LEN)
+    roots = [24, 24, 20, 22]
+    n = int(SR * BEAT * 3.8)
+    x = t(n)
+    for i, b in enumerate(range(0, 16, 4)):
+        f = note(roots[i]) * (1 + 0.6 * np.exp(-x * 30))
+        place(buf, drive(np.sin(osc(f, n)) * env(n, 0.001, 0.4), 1.6), b)
+    return buf
+
+
+def b400_reese():         # 1拍ずつ刻むリース
+    buf = np.zeros(LEN)
+    roots = [36, 36, 39, 36, 32, 32, 36, 32, 34, 34, 38, 34, 31, 34, 35, 31]
+    n = int(SR * BEAT * 0.95)
+    x = t(n)
+    for b, m in enumerate(roots):
+        f = note(m)
+        sig = lowpass4(saw(osc(f, n)) + saw(osc(f * 1.012, n)), 700) + np.sin(osc(f, n))
+        place(buf, drive(sig, 1.4) * np.minimum(1, np.minimum(x / 0.003, (x[-1] - x) / 0.006)), b)
+    return buf
+
+
+save("offbass.wav", b400_offbass(), 0.5)
+save("subdrop.wav", b400_subdrop(), 0.6)
+save("reese.wav", b400_reese(), 0.5)
+
+
+# ---------------- 1280 BPM（Cメジャー）----------------
+setup(1280, 64, "1280")
+rng = np.random.default_rng(12803)
+
+
+def b1280_pbass():        # ファミコン風に2拍ごとオクターブで跳ねるベース
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 2)
+    x = t(n)
+    for b in range(0, 64, 2):
+        m = XT_ROOTS[b // 16] + (12 if (b // 2) % 2 else 0)
+        sig = lowpass(pulse(osc(note(m), n), 0.25), 600)
+        place(buf, sig * np.minimum(1, (x[-1] - x) / 0.002), b)
+    return buf
+
+
+def b1280_sub():          # 和音ごとのサブ＋8拍ごとに頭を押す
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 8)
+    x = t(n)
+    for b in range(0, 64, 8):
+        f = note(XT_ROOTS[b // 16])
+        sig = np.sin(osc(f, n)) * (0.6 + 0.4 * np.exp(-x * 10))
+        place(buf, sig * np.minimum(1, np.minimum(x / 0.002, (x[-1] - x) / 0.004)), b)
+    return buf
+
+
+save("pbass.wav", b1280_pbass(), 0.55)
+save("sub.wav", b1280_sub(), 0.6)
