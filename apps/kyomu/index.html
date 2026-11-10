@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>虚無タイマー — ふざけ箱</title>
+<link rel="stylesheet" href="/core/core.css">
+<style>
+  body { display: grid; place-items: center; text-align: center; transition: background 2s; user-select: none; }
+  body.void { background: #000; }
+  #time { font: clamp(64px, 18vw, 140px) 'DotGothic16', monospace; color: #6c63ff; }
+  #say { font-weight: 800; font-size: 18px; min-height: 3em; padding: 0 20px; }
+  #rec { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  #start { margin-top: 24px; font: 800 22px 'M PLUS Rounded 1c', sans-serif; padding: 14px 34px;
+           background: #6c63ff; color: #fff; border: none; border-radius: 999px; cursor: pointer; }
+  body.void #start, body.void .fz-bar { display: none; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/">← ふざけ箱</a><span>虚無タイマー</span></div>
+<div>
+  <div id="time">0.0</div>
+  <div id="say">何もしない時間を計ります。<br>マウスもキーも画面も触ったら終わり。</div>
+  <button id="start">虚無を始める</button>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js"></script>
+<script>
+const APP = 'kyomu';
+const timeEl = document.getElementById('time'), say = document.getElementById('say'), rec = document.getElementById('rec'), start = document.getElementById('start');
+const lines = [[3, '…'], [8, 'いい感じに何もしていません'], [15, '虚無が深まってきました'], [25, 'あと少しで何かが…起きません'],
+               [30, 'あなたは今、何もしていない'], [45, '画面の向こうで誰かが見ています（いません）'], [60, '1分。立派な虚無です'],
+               [120, '2分。もはや修行'], [300, '5分。悟りの手前']];
+let t0 = 0, raf = 0, armed = false;
+function showRec() { rec.textContent = '最高 ' + FZ.stat(APP, 'best') + ' 秒 ／ 累計虚無 ' + FZ.stat(APP, 'total') + ' 秒'; }
+showRec();
+
+start.onclick = e => {
+  e.stopPropagation();
+  document.body.classList.add('void');
+  say.textContent = '…';
+  t0 = performance.now();
+  // ボタンを押した直後の指の動きで即終了しないよう少し待ってから監視開始
+  setTimeout(() => { armed = true; }, 600);
+  tick();
+};
+function tick() {
+  const s = (performance.now() - t0) / 1000;
+  timeEl.textContent = s.toFixed(1);
+  for (const [sec, l] of lines) if (s >= sec) say.textContent = l;
+  raf = requestAnimationFrame(tick);
+}
+function fail(reason) {
+  if (!armed) return;
+  armed = false;
+  cancelAnimationFrame(raf);
+  const s = Math.floor((performance.now() - t0) / 1000);
+  FZ.max(APP, 'best', s);
+  FZ.add(APP, 'total', s);
+  document.body.classList.remove('void');
+  say.innerHTML = '虚無、失敗。<br>' + reason + '（' + s + '秒）';
+  start.textContent = 'もう一度虚無る';
+  showRec();
+}
+addEventListener('pointermove', () => fail('動きましたね'));
+addEventListener('pointerdown', () => fail('触りましたね'));
+addEventListener('keydown', () => fail('キーを押しましたね'));
+addEventListener('wheel', () => fail('スクロールしましたね'));
+document.addEventListener('visibilitychange', () => { if (document.hidden) fail('よそ見しましたね'); });
+</script>
+</body>
+</html>

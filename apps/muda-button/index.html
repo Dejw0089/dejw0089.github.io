@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>無駄ボタン — ふざけ箱</title>
+<link rel="stylesheet" href="/core/core.css">
+<style>
+  body { display: grid; place-items: center; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  .wrap { text-align: center; }
+  #btn {
+    width: min(64vw, 300px); aspect-ratio: 1; border-radius: 50%; border: none; cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #ff8fa3, #ff4d6d 45%, #a4133c);
+    box-shadow: 0 14px 0 #590d22, 0 24px 40px #0008; transition: transform .06s, box-shadow .06s;
+    color: #fff; font: 800 28px 'DotGothic16', monospace; touch-action: manipulation;
+  }
+  #btn.down { transform: translateY(12px) scaleX(1.06); box-shadow: 0 2px 0 #590d22, 0 6px 14px #0008; }
+  #say { min-height: 3em; font-size: 20px; margin-top: 40px; font-weight: 800; padding: 0 16px; }
+  #n { font-family: 'DotGothic16', monospace; color: var(--muted); margin-top: 6px; }
+  .shake { animation: shake .3s; }
+  @keyframes shake { 25% { translate: -6px 2px; } 50% { translate: 5px -3px; } 75% { translate: -3px 4px; } }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/">← ふざけ箱</a><span>無駄ボタン</span></div>
+<div class="wrap">
+  <button id="btn">押す</button>
+  <div id="say">押しても何も起きません。</div>
+  <div id="n"></div>
+</div>
+<script src="/core/core.js"></script>
+<script>
+const APP = 'muda-button';
+const btn = document.getElementById('btn'), say = document.getElementById('say'), n = document.getElementById('n');
+const lines = [
+  '何も起きませんでした。', '押しましたね。', 'はい。', '特にないです。', '今のは良い押しでした。',
+  '記録しました。誰も見ませんが。', 'ボタンは何も感じていません。', 'まだ押すんですか。',
+  '人生のうち0.3秒を使いました。', '…', 'ありがとうございました（何が？）', 'ボタンが少しすり減りました。'
+];
+const milestones = {
+  1: '押しても何も起きないと言ったのに。', 10: '10回目。何か貰えるかもしれません（貰えます）',
+  50: '50回。ここまで来ると立派な趣味です。', 100: '100回。ボタンが悲鳴をあげています。',
+  500: '500回。ボタンがあなたを覚えました。', 1000: '1000回。もう家族です。'
+};
+let ctx;
+function beep() {
+  try {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square';
+    o.frequency.value = 180 + Math.random() * 600;
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    o.connect(g).connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + 0.13);
+  } catch (e) {}
+}
+function show() { n.textContent = '累計 ' + FZ.stat(APP, 'presses') + ' 回'; }
+show();
+
+btn.addEventListener('pointerdown', () => btn.classList.add('down'));
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, () => btn.classList.remove('down')));
+btn.addEventListener('click', () => {
+  FZ.add(APP, 'presses', 1);
+  const c = FZ.stat(APP, 'presses');
+  say.textContent = milestones[c] || lines[Math.floor(Math.random() * lines.length)];
+  if (Math.random() < 0.08) { document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake'); }
+  beep();
+  show();
+});
+</script>
+</body>
+</html>

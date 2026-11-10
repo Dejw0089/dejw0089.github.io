@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;800&display=swap');
+
+:root {
+  --bg: #12101a;
+  --fg: #fff6e0;
+  --muted: #a49fb8;
+  --accent: #ff4d6d;
+  --card: #1e1a2b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'M PLUS Rounded 1c', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+a { color: inherit; }
+.pixel { font-family: 'DotGothic16', monospace; }
+
+/* アプリ共通ヘッダー */
+.fz-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; font-family: 'DotGothic16', monospace;
+  background: linear-gradient(var(--bg), transparent);
+}
+.fz-bar a { text-decoration: none; padding: 6px 10px; border: 2px solid var(--fg); border-radius: 8px; }
+
+/* 音源ゲットのトースト */
+.fz-toast {
+  position: fixed; left: 50%; top: 18%; z-index: 999;
+  transform: translate(-50%, 0) rotate(-4deg) scale(0.2);
+  background: #ffe066; color: #1b1030; border: 4px solid #1b1030;
+  box-shadow: 8px 8px 0 #ff4d6d;
+  padding: 14px 26px; border-radius: 14px; text-align: center;
+  font-family: 'DotGothic16', monospace;
+  animation: fz-pop .45s cubic-bezier(.2, 1.8, .4, 1) forwards, fz-wiggle .3s .45s 4 alternate;
+}
+.fz-toast-small { font-size: 14px; letter-spacing: .2em; }
+.fz-toast-big { font-size: 28px; margin-top: 4px; }
+.fz-toast.fz-out { transition: .5s; opacity: 0; transform: translate(-50%, -40px) rotate(8deg) scale(.6); }
+@keyframes fz-pop { to { transform: translate(-50%, 0) rotate(-4deg) scale(1); } }
+@keyframes fz-wiggle { from { rotate: -3deg; } to { rotate: 3deg; } }

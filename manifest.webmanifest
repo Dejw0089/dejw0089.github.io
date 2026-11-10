@@ -1,0 +1,11 @@
+{
+  "name": "ふざけ箱",
+  "short_name": "ふざけ箱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#12101a",
+  "theme_color": "#12101a",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

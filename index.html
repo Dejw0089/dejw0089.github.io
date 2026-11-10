@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ふざけ箱 — クソゲー・バカアプリ置き場</title>
+<meta name="description" content="押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまってグルーヴになる。">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#12101a">
+<link rel="stylesheet" href="/core/core.css">
+<style>
+  main { max-width: 880px; margin: 0 auto; padding: 28px 16px 80px; }
+  h1 { font-family: 'DotGothic16', monospace; font-size: clamp(40px, 9vw, 72px); margin: 8px 0 0; line-height: 1;
+       color: #ffe066; text-shadow: 4px 4px 0 var(--accent); transform: rotate(-2deg); }
+  .tag { color: var(--muted); margin: 14px 0 32px; }
+  h2 { font-family: 'DotGothic16', monospace; font-size: 22px; margin: 40px 0 14px; }
+  h2 small { color: var(--muted); font-size: 14px; margin-left: 8px; }
+
+  .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .app { display: block; text-decoration: none; background: var(--card); border-radius: 16px; padding: 18px;
+         border: 3px solid transparent; transition: transform .15s; }
+  .app:hover { transform: rotate(-1.5deg) scale(1.03); border-color: var(--c); }
+  .app .emo { font-size: 44px; }
+  .app .t { font-weight: 800; font-size: 20px; margin-top: 6px; color: var(--c); }
+  .app .d { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  .groove { background: var(--card); border-radius: 16px; padding: 18px; }
+  .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+  .trk { border-radius: 12px; padding: 12px; border: 3px solid #3a3450; background: #15121f; text-align: left;
+         color: var(--fg); font: inherit; cursor: pointer; min-height: 74px; }
+  .trk .n { font-weight: 800; }
+  .trk .h { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .trk.on { border-color: #ffe066; background: #2b2410; box-shadow: 0 0 18px #ffe06655; }
+  .trk.locked { cursor: not-allowed; opacity: .55; }
+  .trk.on .n::after { content: ' ♪'; }
+  .playing .trk.on { animation: bump .5s infinite; }
+  @keyframes bump { 50% { transform: scale(1.04); } }
+  .btn { font: inherit; font-weight: 800; border: 3px solid var(--fg); background: none; color: var(--fg);
+         padding: 8px 16px; border-radius: 10px; cursor: pointer; }
+  .btn.big { background: #ffe066; color: #1b1030; border-color: #ffe066; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .count { color: var(--muted); font-family: 'DotGothic16', monospace; }
+
+  details { background: var(--card); border-radius: 16px; padding: 14px 18px; }
+  summary { cursor: pointer; font-weight: 800; }
+  textarea { width: 100%; height: 70px; margin: 10px 0; background: #0c0a12; color: var(--fg); border: 2px solid #3a3450;
+             border-radius: 8px; padding: 8px; font-family: monospace; font-size: 12px; }
+  .note { color: var(--muted); font-size: 13px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 40px; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ふざけ箱</h1>
+  <p class="tag">押しても何も起きないボタン、納豆、虚無。遊ぶと音源がたまって、だんだんグルーヴになる。</p>
+
+  <h2>アプリ <small>どれも意味はない</small></h2>
+  <div class="apps" id="apps"></div>
+
+  <h2>グルーヴ機 <small id="count" class="count"></small></h2>
+  <div class="groove" id="groove">
+    <div class="row">
+      <button class="btn big" id="play">▶ 鳴らす</button>
+      <span class="note">集めた音源をタップでON/OFF。全部120BPMで勝手に合う。</span>
+    </div>
+    <div class="tracks" id="tracks"></div>
+  </div>
+
+  <h2>セーブ <small>引っ越し・消えたとき用</small></h2>
+  <details>
+    <summary>セーブコードを出す / 読み込む</summary>
+    <p class="note">進捗はこのブラウザに保存されます。iPhoneのSafariはしばらく開かないと消えることがあるので、ホーム画面に追加するか、たまにコードを控えておくと安心です。</p>
+    <div class="row">
+      <button class="btn" id="exp">コードを出す</button>
+      <button class="btn" id="imp">このコードを読み込む</button>
+      <button class="btn" id="rst">全部消す</button>
+    </div>
+    <textarea id="code" placeholder="ここにセーブコード"></textarea>
+    <div class="note" id="msg"></div>
+  </details>
+
+  <footer class="pixel">ふざけ箱 / 2026 / 真面目に作られた不真面目</footer>
+</main>
+
+<script src="/core/core.js"></script>
+<script>
+(async function () {
+  // ---- アプリ一覧 ----
+  const apps = await fetch('/data/apps.json').then(r => r.json());
+  const appsEl = document.getElementById('apps');
+  for (const a of apps) {
+    const el = document.createElement('a');
+    el.className = 'app';
+    el.href = '/apps/' + a.id + '/';
+    el.style.setProperty('--c', a.color);
+    el.innerHTML = '<div class="emo"></div><div class="t"></div><div class="d"></div>';
+    el.querySelector('.emo').textContent = a.emoji;
+    el.querySelector('.t').textContent = a.title;
+    el.querySelector('.d').textContent = a.desc;
+    appsEl.appendChild(el);
+  }
+
+  // ---- グルーヴ機 ----
+  const rules = await FZ.rules();
+  const unlocked = new Set(FZ.unlocked());
+  document.getElementById('count').textContent = unlocked.size + ' / ' + rules.length + ' 音源';
+
+  const tracksEl = document.getElementById('tracks');
+  const on = new Set([...unlocked]);  // 解放済みは最初から全部ON
+  let ctx = null, buffers = {}, gains = {}, sources = [];
+
+  for (const r of rules) {
+    const b = document.createElement('button');
+    const has = unlocked.has(r.id);
+    b.className = 'trk' + (has ? ' on' : ' locked');
+    b.innerHTML = '<div class="n"></div><div class="h"></div>';
+    b.querySelector('.n').textContent = has ? r.name : '？？？';
+    b.querySelector('.h').textContent = has ? '' : r.hint;
+    if (has) b.onclick = () => {
+      on.has(r.id) ? on.delete(r.id) : on.add(r.id);
+      b.classList.toggle('on', on.has(r.id));
+      if (gains[r.id]) gains[r.id].gain.setTargetAtTime(on.has(r.id) ? 1 : 0, ctx.currentTime, 0.02);
+    };
+    tracksEl.appendChild(b);
+  }
+
+  const playBtn = document.getElementById('play');
+  const groove = document.getElementById('groove');
+  playBtn.onclick = async () => {
+    if (sources.length) { stop(); return; }
+    if (!unlocked.size) { playBtn.textContent = 'まだ音源がない。アプリで遊べ'; return; }
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    await ctx.resume();
+    playBtn.textContent = '…読み込み中';
+    const list = rules.filter(r => unlocked.has(r.id));
+    await Promise.all(list.map(async r => {
+      if (!buffers[r.id]) {
+        const ab = await fetch(r.file).then(x => x.arrayBuffer());
+        buffers[r.id] = await ctx.decodeAudioData(ab);
+      }
+    }));
+    const t0 = ctx.currentTime + 0.1;
+    for (const r of list) {
+      const src = ctx.createBufferSource();
+      src.buffer = buffers[r.id];
+      src.loop = true;
+      const g = ctx.createGain();
+      g.gain.value = on.has(r.id) ? 1 : 0;
+      src.connect(g).connect(ctx.destination);
+      src.start(t0);
+      gains[r.id] = g;
+      sources.push(src);
+    }
+    groove.classList.add('playing');
+    playBtn.textContent = '■ 止める';
+  };
+  function stop() {
+    sources.forEach(s => s.stop());
+    sources = []; gains = {};
+    groove.classList.remove('playing');
+    playBtn.textContent = '▶ 鳴らす';
+  }
+
+  // ---- セーブコード ----
+  const code = document.getElementById('code'), msg = document.getElementById('msg');
+  document.getElementById('exp').onclick = () => {
+    code.value = FZ.exportCode();
+    code.select();
+    msg.textContent = 'コピーしてどこかに貼っておいてください。';
+  };
+  document.getElementById('imp').onclick = () => {
+    try { FZ.importCode(code.value); msg.textContent = '読み込みました。'; setTimeout(() => location.reload(), 600); }
+    catch (e) { msg.textContent = e.message; }
+  };
+  document.getElementById('rst').onclick = () => {
+    if (confirm('全部の記録と音源が消えます。いいですか？')) { FZ.reset(); location.reload(); }
+  };
+})();
+</script>
+</body>
+</html>

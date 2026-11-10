@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>納豆まぜまぜ — ふざけ箱</title>
+<link rel="stylesheet" href="/core/core.css">
+<style>
+  body { overflow: hidden; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; cursor: grab; }
+  .hud { position: fixed; left: 0; right: 0; bottom: 24px; text-align: center; pointer-events: none; }
+  #rot { font: 40px 'DotGothic16', monospace; color: #ffe066; }
+  #msg { font-weight: 800; margin-top: 6px; min-height: 1.4em; }
+  #total { color: var(--muted); font-size: 13px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/">← ふざけ箱</a><span>納豆まぜまぜ</span></div>
+<canvas id="c"></canvas>
+<div class="hud">
+  <div id="rot">0 回</div>
+  <div id="msg">器のまわりをぐるぐるなぞってまぜろ</div>
+  <div id="total"></div>
+</div>
+<script src="/core/core.js"></script>
+<script>
+const APP = 'natto';
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const rotEl = document.getElementById('rot'), msgEl = document.getElementById('msg'), totalEl = document.getElementById('total');
+let W, H, R, dpr;
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight; R = Math.min(W, H) * 0.32;
+  cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize(); addEventListener('resize', resize);
+
+// 豆
+const beans = Array.from({ length: 46 }, () => ({ a: Math.random() * 6.28, r: Math.random() * 0.8, s: 0.5 + Math.random() * 0.8 }));
+let session = 0, acc = 0, spin = 0, last = null, dragging = false;
+const msgs = { 5: 'まだ豆。', 20: 'ちょっと糸が出てきた', 50: '粘りが出てきた', 100: 'ネバネバ', 200: 'ネバネバネバネバ', 300: '北大路魯山人が頷いている', 424: 'もはや糸しかない', 1000: '納豆が宇宙になった' };
+
+function angle(e) { return Math.atan2(e.clientY - H / 2, e.clientX - W / 2); }
+cv.addEventListener('pointerdown', e => { dragging = true; last = angle(e); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerup', () => { dragging = false; last = null; });
+cv.addEventListener('pointercancel', () => { dragging = false; last = null; });
+cv.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const a = angle(e);
+  let d = a - last;
+  if (d > Math.PI) d -= 2 * Math.PI;
+  if (d < -Math.PI) d += 2 * Math.PI;
+  last = a;
+  acc += Math.abs(d);
+  spin += d;
+  while (acc >= Math.PI * 2) {
+    acc -= Math.PI * 2;
+    session++;
+    FZ.add(APP, 'rotations', 1);
+    rotEl.textContent = session + ' 回';
+    if (msgs[session]) msgEl.textContent = msgs[session];
+    showTotal();
+  }
+});
+function showTotal() { totalEl.textContent = '生涯まぜ回数 ' + FZ.stat(APP, 'rotations') + ' 回'; }
+showTotal();
+
+function draw() {
+  g.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2 - 20;
+  // 器
+  g.fillStyle = '#f1e9da'; g.beginPath(); g.ellipse(cx, cy, R * 1.12, R * 1.12, 0, 0, 7); g.fill();
+  g.fillStyle = '#d9cbb0'; g.beginPath(); g.ellipse(cx, cy, R, R, 0, 0, 7); g.fill();
+  const sticky = Math.min(1, session / 300);
+  const pos = beans.map(b => {
+    const a = b.a + spin * b.s * 0.6;
+    const r = R * (0.15 + b.r * 0.75);
+    return [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+  });
+  // 糸
+  g.strokeStyle = `rgba(255,255,255,${0.15 + sticky * 0.6})`;
+  g.lineWidth = 0.6 + sticky * 1.5;
+  const links = Math.floor(sticky * 120);
+  for (let i = 0; i < links; i++) {
+    const p = pos[i % pos.length], q = pos[(i * 7 + 3) % pos.length];
+    g.beginPath(); g.moveTo(p[0], p[1]);
+    g.quadraticCurveTo(cx + Math.sin(spin + i) * 20, cy + Math.cos(spin + i) * 20, q[0], q[1]);
+    g.stroke();
+  }
+  // 豆
+  for (const [x, y] of pos) {
+    g.fillStyle = '#8a5a2b'; g.beginPath(); g.ellipse(x, y, 9, 7, spin, 0, 7); g.fill();
+    g.fillStyle = '#b07a43'; g.beginPath(); g.ellipse(x - 2, y - 2, 3, 2, spin, 0, 7); g.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
