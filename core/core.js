@@ -7,6 +7,8 @@
  *   FZ.stat('natto', 'rotations')     // 現在値
  */
 (function () {
+  // 更新したらここと各HTMLの ?v= を上げる（GitHub Pagesのキャッシュ対策）
+  const V = '3';
   const KEY = 'fuzake-box-v1';
   const blank = () => ({ v: 1, stats: {}, unlocked: [], since: Date.now() });
 
@@ -28,7 +30,7 @@
 
   // 解放ルールは全員共通の /data/unlocks.json
   let rules = null;
-  const rulesReady = fetch('/data/unlocks.json')
+  const rulesReady = fetch('/data/unlocks.json?v=' + V)
     .then(r => r.json())
     .then(j => { rules = j; check(); return j; })
     .catch(() => (rules = []));
@@ -124,6 +126,6 @@
     unlocked: () => state.unlocked.slice(),
     rules: () => rulesReady,
     exportCode, importCode, reset,
-    lang: () => lang, setLang, t, apply, langToggle,
+    lang: () => lang, setLang, t, apply, langToggle, V,
   };
 })();

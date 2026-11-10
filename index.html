@@ -7,7 +7,7 @@
 <meta name="description" content="Yusuke Iwasaki — PjM / PdM / PMO. Plus a gift of pure uselessness.">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#12101a">
-<link rel="stylesheet" href="/core/core.css">
+<link rel="stylesheet" href="/core/core.css?v=3">
 <style>
   main { max-width: 880px; margin: 0 auto; padding: 28px 16px 80px; }
   h1 { font-family: 'DotGothic16', monospace; font-size: clamp(40px, 9vw, 72px); margin: 8px 0 0; line-height: 1;
@@ -140,7 +140,7 @@
   <footer class="pixel" data-i18n="footer"></footer>
 </main>
 
-<script src="/core/core.js"></script>
+<script src="/core/core.js?v=3"></script>
 <script>
 const T = {
   en: {
@@ -192,7 +192,7 @@ document.getElementById('code').placeholder = L.codePh;
 
 (async function () {
   // ---- 自己紹介 ----
-  const p = await fetch('/data/profile.json').then(r => r.json());
+  const p = await fetch('/data/profile.json?v=' + FZ.V).then(r => r.json());
   document.title = p.name + ' | ' + L.boxName;
   document.getElementById('pname').textContent = t(p.name);
   document.getElementById('prole').textContent = t(p.role);
@@ -225,7 +225,7 @@ document.getElementById('code').placeholder = L.codePh;
   box.onclick = () => { if (!box.classList.contains('open')) { FZ.add('top', 'gifts', 1); openGift(true); } };
 
   // ---- アプリ一覧 ----
-  const apps = await fetch('/data/apps.json').then(r => r.json());
+  const apps = await fetch('/data/apps.json?v=' + FZ.V).then(r => r.json());
   const appsEl = document.getElementById('apps');
   for (const a of apps) {
     const el = document.createElement('a');
