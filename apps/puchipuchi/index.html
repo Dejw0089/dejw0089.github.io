@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Bubble Wrap | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   #sheet { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; padding: 12px; width: min(92vw, 420px); margin: 0 auto;
@@ -25,7 +25,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'puchipuchi';
 const N = 48;
@@ -49,7 +49,7 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const sheet = document.getElementById('sheet'), say = document.getElementById('say'), rec = document.getElementById('rec');
-let left = 0, ctx = null;
+let left = 0, ctx = null, sheetStart = 0;
 function snap() {
   try {
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
@@ -64,13 +64,14 @@ function snap() {
 }
 function show() { rec.textContent = L.rec(FZ.stat(APP, 'pops'), FZ.stat(APP, 'sheets')); }
 function pop(b) {
-  if (b.classList.contains('popped')) return;
+  if (b.classList.contains('popped')) { FZ.add(APP, 'repops', 1); return; }
   b.classList.add('popped');
   snap();
   left--;
   FZ.add(APP, 'pops', 1);
   if (left === 0) {
     FZ.add(APP, 'sheets', 1);
+    if (performance.now() - sheetStart <= 20000) FZ.add(APP, 'fastSheets', 1);
     say.textContent = L.sheet;
     setTimeout(newSheet, 600);
   } else if (Math.random() < 0.15) {
@@ -88,6 +89,7 @@ function newSheet() {
     sheet.appendChild(b);
   }
   left = N;
+  sheetStart = performance.now();
 }
 newSheet();
 show();

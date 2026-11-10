@@ -41,7 +41,7 @@ describe('copy', () => {
   test('Japanese copy and line breaks', async () => {
     page = await openPage('/', { lang: 'ja', save: OPEN });
     expect(page.$('.il4').innerHTML).toBe('ご来訪のお礼に、<br>無駄の詰め合わせをどうぞ。');
-    expect(page.$('.tag').innerHTML).toBe('ボタン、納豆、虚無、流しそうめん、ハンコ、猫。<br>遊ぶと音源がたまって、だんだんグルーヴになる。');
+    expect(page.$('.tag').innerHTML).toBe('遊ぶと音源がたまって、だんだんグルーヴになる。');
     expect(page.text('footer')).toBe('© 2026 Yusuke Iwasaki');
   });
   test('the invitation warns that sound will play', async () => {

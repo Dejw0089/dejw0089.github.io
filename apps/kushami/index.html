@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Almost Sneeze | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   #face { font-size: 90px; line-height: 1; transition: transform .1s; }
@@ -28,7 +28,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'kushami';
 const PERIOD = 700;   // むずむずの波の速さ（ms）
@@ -54,7 +54,7 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const face = document.getElementById('face'), bar = document.getElementById('bar'), say = document.getElementById('say'), rec = document.getElementById('rec');
-let t0 = performance.now();
+let t0 = performance.now(), fizzleRun = 0;
 function level() { return Math.round(100 * Math.abs(Math.sin((performance.now() - t0) / PERIOD))); }
 function show() { rec.textContent = L.rec(FZ.stat(APP, 'sneezes'), FZ.stat(APP, 'best')); }
 function frame() {
@@ -65,7 +65,9 @@ function frame() {
 }
 document.getElementById('sneeze').onclick = () => {
   const p = level();
-  if (p < 30) { say.textContent = L.weak; return; }
+  if (p < 30) { FZ.max(APP, 'fizzleStreak', ++fizzleRun); say.textContent = L.weak; return; }
+  fizzleRun = 0;
+  if (p === 100) FZ.add(APP, 'perfects', 1);
   FZ.add(APP, 'sneezes', 1);
   FZ.max(APP, 'best', p);
   say.textContent = L.out(p);

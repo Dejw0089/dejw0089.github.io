@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Stamp Rush | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   #stage { width: min(88vw, 420px); margin: 0 auto; touch-action: none; cursor: pointer; }  /* 結果の長い文で外枠が広がっても真ん中に */
@@ -42,7 +42,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'hanko';
 const ROUND = 10;          // 秒
@@ -86,7 +86,7 @@ const $ = id => document.getElementById(id);
 const stage = $('stage'), desk = $('desk'), timeEl = $('time'), countEl = $('count'), say = $('say'), rec = $('rec');
 
 let state = 'ready';   // ready → running → cooldown → ready
-let t0 = 0, count = 0, onDoc = 0, docNo = 1, doc = null, tick = null;
+let t0 = 0, count = 0, onDoc = 0, docNo = 1, doc = null, tick = null, roundDocs = 1;
 
 function newDoc() {
   if (doc) { const old = doc; old.classList.add('gone'); setTimeout(() => old.remove(), 260); }
@@ -97,6 +97,7 @@ function newDoc() {
   doc.querySelector('.no').textContent = L.docNo(docNo++);
   desk.appendChild(doc);
   onDoc = 0;
+  if (state === 'running') FZ.max(APP, 'deepest', ++roundDocs);   // 1ラウンドで何種類目の書類まで行ったか
 }
 
 let ctx = null;
@@ -121,7 +122,7 @@ function show() { rec.textContent = L.rec(FZ.stat(APP, 'stamps'), FZ.stat(APP, '
 
 function stamp(e) {
   if (state === 'running' && performance.now() - t0 >= ROUND * 1000) { finish(); return; }  // 10秒を過ぎた1打は数えない
-  if (state === 'cooldown') return;
+  if (state === 'cooldown') { FZ.add(APP, 'eager', 1); return; }   // 結果発表中に押した
   if (state === 'ready') start();
   const r = desk.getBoundingClientRect();
   const x = e && e.clientX ? e.clientX - r.left : r.width * (0.2 + Math.random() * 0.6);
@@ -144,6 +145,7 @@ function start() {
   state = 'running';
   t0 = performance.now();
   count = 0;
+  roundDocs = 1;
   say.textContent = '';
   tick = setInterval(update, 50);
 }
@@ -158,6 +160,7 @@ function finish() {
   clearInterval(tick);
   state = 'cooldown';
   FZ.max(APP, 'best', count);
+  if (count <= 3) FZ.add(APP, 'lazy', 1);                        // やる気のないラウンド
   say.textContent = L.result(count);
   show();
   const c = count;

@@ -853,3 +853,504 @@ save("sparkle.wav", x1280_sparkle(), 0.35)
 save("glitch.wav", x1280_glitch(), 0.3)
 save("tribass.wav", x1280_tribass(), 0.4)
 save("laser.wav", x1280_laser(), 0.25)
+
+
+# =====================================================================
+# 第3弾（各テンポ 120:12 / 180:10 / 400:10 / 1280:10）。音の出だしは全部、格子の上に置く
+#   120/180/400 は16分、1280 は1拍が単位
+# =====================================================================
+
+def pat(buf, sig, s, step=0.25, start=0, vel=None):
+    """'X'=強 'x'=弱 '.'=休み の文字列どおりに並べる（1文字 = step 拍）"""
+    for i, ch in enumerate(s):
+        if ch == '.':
+            continue
+        v = 1.0 if ch == 'X' else 0.55
+        place_wrap(buf, sig * v * (vel or 1), start + i * step)
+
+
+def tone_hit(f0, f1, n, decay):
+    x = t(n)
+    f = f1 + (f0 - f1) * np.exp(-x * 40)
+    return np.sin(osc(f, n)) * env(n, 0.0005, decay)
+
+
+def noise_hit(n, hp, decay, lp=None):
+    s = highpass(rng.standard_normal(n), hp)
+    if lp:
+        s = lowpass(s, lp)
+    return s * env(n, 0.0005, decay)
+
+
+def chord_saws(notes, n, detune=0.004):
+    return sum(saw(osc(note(m) * (1 + detune * (k - 1)), n)) for k, m in enumerate(notes))
+
+
+# ---------------- 120 BPM（Cマイナー、8拍）----------------
+setup(120, 8, "120")
+rng = np.random.default_rng(1202)
+
+
+def y120_rim():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.05)
+    rim = lowpass(np.sign(np.sin(osc(1700, n))), 4000) * env(n, 0.0005, 0.012)
+    pat(buf, rim, "..x...x...x..x.x" * 2)
+    return buf
+
+
+def y120_conga():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.25)
+    hi, lo = tone_hit(420, 330, n, 0.08), tone_hit(300, 220, n, 0.1)
+    pat(buf, hi, "X..x..x.....x...X..x..x...x.....")
+    pat(buf, lo, "......x.X......x......x.X...x..x")
+    return buf
+
+
+def y120_tamb():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.12)
+    pat(buf, noise_hit(n, 6000, 0.04), "xxXxxxXxxxXxxxXx" * 2)
+    return buf
+
+
+def y120_cowbell():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.2)
+    cb = lowpass(np.sign(np.sin(osc(540, n))) + np.sign(np.sin(osc(800, n))), 3000) * env(n, 0.001, 0.06)
+    pat(buf, cb, "X.....x...X.......x...X.....x.x.")
+    return buf
+
+
+def y120_epiano():
+    buf = np.zeros(LEN)
+    n = int(SR * 1.0)
+    for b, ch in [(0, [60, 63, 67, 70]), (2.5, [60, 63, 67, 70]), (4, [58, 62, 65, 69]), (6.5, [58, 62, 65, 69])]:
+        place_wrap(buf, sum(fm_bell(note(m), n, 0.45) for m in ch), b)
+    return buf
+
+
+def y120_bounce():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.45)
+    x = t(n)
+    for i in range(16):
+        root = 36 if i < 8 else 34
+        m = root + (12 if i % 2 else 0)
+        place_wrap(buf, lowpass(saw(osc(note(m), n)), 700) * np.minimum(1, (x[-1] - x) / 0.01) * env(n, 0.002, 0.2), i * 0.5)
+    return buf
+
+
+def y120_strings():
+    buf = np.zeros(LEN)
+    for c, ch in enumerate([[60, 63, 67], [58, 62, 65]]):
+        n = int(SR * BEAT * 4)
+        x = t(n)
+        sig = lowpass4(chord_saws(ch, n, 0.006), 1200)
+        a = np.minimum(1, np.minimum(x / 0.6, (x[-1] - x) / 0.4))
+        place_wrap(buf, sig * a, c * 4)
+    return buf
+
+
+def y120_whistle():
+    buf = np.zeros(LEN)
+    for m, b, L in [(79, 0, 1.5), (82, 1.5, 0.5), (84, 2, 2), (82, 4, 1), (79, 5, 1), (77, 6, 2)]:
+        n = int(SR * BEAT * L)
+        x = t(n)
+        f = note(m) * (1 + 0.01 * np.sin(2 * np.pi * 6 * x))
+        a = np.minimum(1, np.minimum(x / 0.02, (x[-1] - x) / 0.05))
+        place_wrap(buf, np.sin(osc(f, n)) * a, b)
+    return buf
+
+
+def y120_vibes():
+    buf = np.zeros(LEN)
+    arp = [72, 75, 79, 82, 79, 75, 72, 70, 70, 74, 77, 81, 77, 74, 70, 67]
+    n = int(SR * 0.6)
+    x = t(n)
+    for i, m in enumerate(arp):
+        place_wrap(buf, np.sin(osc(note(m), n)) * (1 + 0.3 * np.sin(2 * np.pi * 5 * x)) * env(n, 0.002, 0.25), i * 0.5)
+    return buf
+
+
+def y120_scratch():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.5)
+    x = t(n)
+    sw = np.sin(osc(300 + 900 * np.abs(np.sin(2 * np.pi * 6 * x)), n)) * env(n, 0.002, 0.08)
+    pat(buf, sw, "..............X.......X.....X.x.")
+    return buf
+
+
+def y120_snap():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.08)
+    pat(buf, noise_hit(n, 2500, 0.015, 9000), "....X.......X..." * 2)
+    return buf
+
+
+def y120_boom():
+    buf = np.zeros(LEN)
+    n = int(SR * 1.2)
+    x = t(n)
+    boom = drive(np.sin(osc(note(24) + 60 * np.exp(-x * 25), n)) * env(n, 0.001, 0.5), 1.4)
+    pat(buf, boom, "X..........x....X.........x.....")
+    return buf
+
+
+save("rim.wav", y120_rim(), 0.4)
+save("conga.wav", y120_conga(), 0.5)
+save("tamb.wav", y120_tamb(), 0.3)
+save("cowbell.wav", y120_cowbell(), 0.35)
+save("epiano.wav", y120_epiano(), 0.4)
+save("bounce.wav", y120_bounce(), 0.5)
+save("strings.wav", y120_strings(), 0.35)
+save("whistle.wav", y120_whistle(), 0.3)
+save("vibes.wav", y120_vibes(), 0.35)
+save("scratch.wav", y120_scratch(), 0.4)
+save("snap.wav", y120_snap(), 0.45)
+save("boom.wav", y120_boom(), 0.7)
+
+
+# ---------------- 180 BPM（Fマイナー、16拍）----------------
+setup(180, 16, "180")
+rng = np.random.default_rng(1802)
+
+
+def y180_break2():
+    buf = np.zeros(LEN)
+    k, s = dnb_kick(), dnb_snare()
+    for bar in range(4):
+        o = bar * 4
+        pat(buf, k, "X.......x.X.....", start=o)
+        pat(buf, s, "....X.......X...", start=o)
+        pat(buf, s * 0.25, "......x.......x." if bar % 2 else ".x.....x......x.", start=o)
+    return buf
+
+
+def y180_shaker():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.06)
+    pat(buf, noise_hit(n, 5000, 0.02), "xXxx" * 16)
+    return buf
+
+
+def y180_reese2():
+    buf = np.zeros(LEN)
+    line = [29, 29, 41, 29, 32, 32, 44, 32, 25, 25, 37, 25, 24, 27, 31, 36]
+    n = int(SR * BEAT * 1)
+    x = t(n)
+    for i, m in enumerate(line):
+        f = note(m)
+        sig = lowpass4(saw(osc(f, n)) + saw(osc(f * 1.01, n)), 500 + 400 * np.exp(-x * 8))
+        place_wrap(buf, drive(sig * 1.5, 1.3) * np.minimum(1, np.minimum(x / 0.005, (x[-1] - x) / 0.01)), i)
+    return buf
+
+
+def y180_piano():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.7)
+    for b, ch in [(0.5, [65, 68, 72]), (2.75, [65, 68, 72]), (4.5, [68, 72, 75]), (6.75, [68, 72, 75]),
+                  (8.5, [61, 65, 68]), (10.75, [61, 65, 68]), (12.5, [60, 64, 67]), (14.75, [60, 64, 67])]:
+        place_wrap(buf, sum(fm_bell(note(m), n, 0.3) for m in ch), b)
+    return buf
+
+
+def y180_pad2():
+    buf = np.zeros(LEN)
+    for c, ch in enumerate([[56, 60, 63, 67], [51, 55, 58, 63]]):
+        n = int(SR * BEAT * 8)
+        x = t(n)
+        sig = lowpass4(chord_saws(ch, n, 0.005), 700)
+        a = np.minimum(1, np.minimum(x / 1.0, (x[-1] - x) / 0.8))
+        place_wrap(buf, sig * a, c * 8)
+    return buf
+
+
+def y180_arp():
+    buf = np.zeros(LEN)
+    chords = [[65, 68, 72, 77], [68, 72, 75, 80], [61, 65, 68, 73], [60, 64, 67, 72]]
+    n = int(SR * BEAT * 0.25)
+    x = t(n)
+    for i in range(64):
+        m = chords[i // 16][i % 4]
+        place_wrap(buf, lowpass(saw(osc(note(m), n)), 2200) * np.minimum(1, (x[-1] - x) / 0.004), i * 0.25)
+    return buf
+
+
+def y180_siren():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 4)
+    x = t(n)
+    f = note(77) * (1 + 0.5 * x / x[-1])
+    place_wrap(buf, np.sin(osc(f, n)) * np.minimum(1, (x[-1] - x) / 0.05) * env(n, 0.002, 2.0), 12)
+    return buf
+
+
+def y180_tom():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.3)
+    for i, f in enumerate([220, 220, 180, 180, 150, 150, 120, 120]):
+        place_wrap(buf, tone_hit(f * 1.5, f, n, 0.12), 14 + i * 0.25)
+    return buf
+
+
+def y180_hoover():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 3)
+    x = t(n)
+    for b, ch in [(0, [53, 56, 60]), (8, [49, 53, 56])]:
+        dive = 1 - 0.2 * np.exp(-x * 12)
+        sig = sum(saw(osc(note(m) * d * dive, n)) for m in ch for d in (0.99, 1.0, 1.012))
+        place_wrap(buf, lowpass4(sig, 2000) * np.minimum(1, np.minimum(x / 0.004, (x[-1] - x) / 0.05)), b)
+    return buf
+
+
+def y180_vchop():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.4)
+    a, u = formant(note(65), n, "a"), formant(note(68), n, "u")
+    x = t(n)
+    fade = np.minimum(1, np.minimum(x / 0.003, (x[-1] - x) / 0.01))
+    pat(buf, a * fade, "x..x..x.........x..x..x.....x...")
+    pat(buf, u * fade, "..........x.x.............x.x...", start=0)
+    pat(buf, a * fade, "x..x..x.........x..x..x.....x...", start=8)
+    return buf
+
+
+save("break2.wav", y180_break2(), 0.85)
+save("shaker.wav", y180_shaker(), 0.3)
+save("reese2.wav", y180_reese2(), 0.5)
+save("piano.wav", y180_piano(), 0.4)
+save("pad2.wav", y180_pad2(), 0.35)
+save("arp.wav", y180_arp(), 0.3)
+save("siren.wav", y180_siren(), 0.3)
+save("tom.wav", y180_tom(), 0.5)
+save("hoover.wav", y180_hoover(), 0.4)
+save("vchop.wav", y180_vchop(), 0.45)
+
+
+# ---------------- 400 BPM（Cマイナー、16拍）----------------
+setup(400, 16, "400")
+rng = np.random.default_rng(4002)
+
+
+def y400_stomp():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.5)
+    x = t(n)
+    tok = drive(np.sin(osc(note(36) + 200 * np.exp(-x * 80), n)) * env(n, 0.0003, 0.04), 8)
+    pat(buf, tok, "X.x." * 16)
+    return buf
+
+
+def y400_clap():
+    buf = np.zeros(LEN)
+    pat(buf, drive(clap_one(int(SR * 0.15)), 3), "....X..." * 8)
+    return buf
+
+
+def y400_hoover2():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 3.5)
+    x = t(n)
+    for b, ch in [(0, [51, 55, 58]), (4, [48, 51, 55]), (8, [53, 56, 60]), (12, [50, 53, 58])]:
+        dive = 1 - 0.3 * np.exp(-x * 20)
+        sig = sum(saw(osc(note(m) * d * dive, n)) for m in ch for d in (0.99, 1.0, 1.013))
+        place(buf, drive(lowpass4(sig, 2400) * 0.6, 2) * np.minimum(1, np.minimum(x / 0.003, (x[-1] - x) / 0.03)), b)
+    return buf
+
+
+def y400_piano():
+    buf = np.zeros(LEN)
+    riff = [72, 75, 79, 75, 72, 75, 80, 75, 70, 74, 77, 74, 72, 75, 79, 84] * 2
+    n = int(SR * BEAT * 0.5)
+    for i, m in enumerate(riff):
+        place(buf, fm_bell(note(m), n, 0.06), i * 0.5)
+    return buf
+
+
+def y400_crash():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 4)
+    for b in (0, 8):
+        place(buf, noise_hit(n, 4000, 0.4), b)
+    return buf
+
+
+def y400_acid():
+    buf = np.zeros(LEN)
+    line = [36, 36, 48, 36, 39, 36, 46, 36, 36, 48, 36, 43, 36, 39, 48, 46] * 4
+    n = int(SR * BEAT * 0.25)
+    x = t(n)
+    for i, m in enumerate(line):
+        cut = 300 + 2500 * np.exp(-x * 30) * (0.5 + 0.5 * np.sin(i / 64 * 2 * np.pi))
+        sig = drive(lowpass4(saw(osc(note(m), n)), cut) * 3, 2)
+        place(buf, sig * np.minimum(1, (x[-1] - x) / 0.002), i * 0.25)
+    return buf
+
+
+def y400_stabs():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.3)
+    st = lowpass(chord_saws([60, 63, 67], n), 3500) * env(n, 0.001, 0.03)
+    pat(buf, st, "..x..x....x..x.." * 4)
+    return buf
+
+
+def y400_supersaw():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 4)
+    x = t(n)
+    for b, ch in [(0, [60, 63, 67, 72]), (4, [60, 63, 67, 72]), (8, [56, 60, 63, 68]), (12, [58, 62, 65, 70])]:
+        sig = sum(supersaw(note(m), n) for m in ch)
+        place(buf, lowpass(sig, 4000) * np.minimum(1, np.minimum(x / 0.004, (x[-1] - x) / 0.03)), b)
+    return buf
+
+
+def y400_ride():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.5)
+    ride = drive(highpass(sum(np.sign(np.sin(osc(f, n))) for f in (3300, 4700, 6100)), 3000) * env(n, 0.001, 0.05), 2)
+    pat(buf, ride, "X.x." * 16)
+    return buf
+
+
+def y400_vox():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.8)
+    x = t(n)
+    hey = drive(formant(note(60), n, "a") * 2, 3) * np.minimum(1, np.minimum(x / 0.003, (x[-1] - x) / 0.02))
+    pat(buf, hey, "X.......X.......X.......X...X...", step=0.5)
+    return buf
+
+
+save("stomp.wav", y400_stomp(), 0.55)
+save("clap.wav", y400_clap(), 0.5)
+save("hoover2.wav", y400_hoover2(), 0.4)
+save("piano.wav", y400_piano(), 0.35)
+save("crash.wav", y400_crash(), 0.3)
+save("acid.wav", y400_acid(), 0.4)
+save("stabs.wav", y400_stabs(), 0.35)
+save("supersaw.wav", y400_supersaw(), 0.35)
+save("ride.wav", y400_ride(), 0.3)
+save("vox.wav", y400_vox(), 0.45)
+
+
+# ---------------- 1280 BPM（Cメジャー、64拍）----------------
+setup(1280, 64, "1280")
+rng = np.random.default_rng(12802)
+XT_CH = [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]]
+
+
+def y1280_melody2():
+    buf = np.zeros(LEN)
+    mel = [76, 79, 84, 79, 72, 76, 81, 76, 77, 81, 84, 81, 79, 83, 86, 83]
+    n = int(SR * BEAT * 4)
+    x = t(n)
+    for i, m in enumerate(mel):
+        place(buf, pulse(osc(note(m), n), 0.125) * np.minimum(1, (x[-1] - x) / 0.003), i * 4)
+    return buf
+
+
+def y1280_kick2():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 2)
+    x = t(n)
+    for b in range(0, 64, 2):
+        root = XT_ROOTS[b // 16] + 12
+        k = drive(np.sin(osc(note(root) + 400 * np.exp(-x * 120), n)) * env(n, 0.0002, 0.04), 8)
+        place(buf, k * np.minimum(1, (x[-1] - x) / 0.002), b)
+    return buf
+
+
+def y1280_chords():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 6)
+    x = t(n)
+    for b in range(0, 64, 8):
+        ch = XT_CH[b // 16]
+        sig = sum(triangle(osc(note(m + 12), n)) for m in ch)
+        place(buf, sig * np.minimum(1, (x[-1] - x) / 0.004), b)
+    return buf
+
+
+def y1280_bell2():
+    buf = np.zeros(LEN)
+    for b in range(0, 64, 8):
+        ch = XT_CH[b // 16]
+        m = ch[2 - (b // 8) % 3] + 24
+        place(buf, fm_bell(note(m), int(SR * BEAT * 8), 0.1), b)
+    return buf
+
+
+def y1280_snare():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 2)
+    s = np.sign(rng.standard_normal(n // 3).repeat(3))[:n] * env(n, 0.0003, 0.03)
+    for b in range(4, 64, 8):
+        place(buf, s, b)
+    return buf
+
+
+def y1280_arp2():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT)
+    x = t(n)
+    for b in range(64):
+        ch = XT_CH[b // 16]
+        m = ch[2 - b % 3] + 12 * (2 - (b // 3) % 2)
+        place(buf, pulse(osc(note(m), n), 0.5) * np.minimum(1, (x[-1] - x) / 0.002), b)
+    return buf
+
+
+def y1280_bass2():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 4)
+    x = t(n)
+    for b in range(0, 64, 4):
+        m = XT_CH[b // 16][0] - 12 + (7 if (b // 4) % 2 else 0)
+        place(buf, lowpass(saw(osc(note(m), n)), 1500) * np.minimum(1, (x[-1] - x) / 0.003), b)
+    return buf
+
+
+def y1280_coin():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 2)
+    x = t(n)
+    for b in range(0, 64, 16):
+        place(buf, pulse(osc(note(83), n), 0.5) * np.minimum(1, (x[-1] - x) / 0.002), b + 8)
+        place(buf, pulse(osc(note(88), n * 3), 0.5)[: n * 3] * env(n * 3, 0.001, 0.08), b + 10)
+    return buf
+
+
+def y1280_pad():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 16)
+    x = t(n)
+    for b in range(0, 64, 16):
+        sig = lowpass4(sum(pulse(osc(note(m), n), 0.5) for m in XT_CH[b // 16]), 900)
+        place(buf, sig * np.minimum(1, np.minimum(x / 0.005, (x[-1] - x) / 0.02)), b)
+    return buf
+
+
+def y1280_ticks():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.5)
+    tick = np.sign(rng.standard_normal(n)) * env(n, 0.0002, 0.004)
+    for b in range(64):
+        place(buf, tick * (1.0 if b % 2 else 0.4), b)
+    return buf
+
+
+save("melody2.wav", y1280_melody2(), 0.25)
+save("kick2.wav", y1280_kick2(), 0.45)
+save("chords.wav", y1280_chords(), 0.3)
+save("bell2.wav", y1280_bell2(), 0.35)
+save("snare.wav", y1280_snare(), 0.3)
+save("arp2.wav", y1280_arp2(), 0.2)
+save("bass2.wav", y1280_bass2(), 0.35)
+save("coin.wav", y1280_coin(), 0.25)
+save("pad.wav", y1280_pad(), 0.25)
+save("ticks.wav", y1280_ticks(), 0.25)

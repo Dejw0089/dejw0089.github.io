@@ -18,7 +18,8 @@ function readWav(file) {
 }
 
 // 4ms ごとのエネルギーが、直前より急に（ratio 倍以上）大きくなった所を出だしとみなす
-function onsets(file, { frameMs = 4, ratio = 4, floor = 1e-4, mergeMs = 30 } = {}) {
+// quiet を指定すると、ほぼ無音（全体の最大の quiet 倍未満）から立ち上がった所だけを数える（持続音の揺れを拾わない）
+function onsets(file, { frameMs = 4, ratio = 4, floor = 1e-4, mergeMs = 30, quiet = 0 } = {}) {
   const { sr, samples } = readWav(file);
   const f = Math.round(sr * frameMs / 1000);
   const e = [];
@@ -28,8 +29,10 @@ function onsets(file, { frameMs = 4, ratio = 4, floor = 1e-4, mergeMs = 30 } = {
     e.push(sum / f);
   }
   const out = [];
+  const top = Math.max(...e);
   for (let k = 3; k < e.length; k++) {
     const prev = (e[k - 1] + e[k - 2] + e[k - 3]) / 3;
+    if (quiet && prev > top * quiet) continue;
     if (e[k] > floor && e[k] > prev * ratio) {
       // その小さな区間の中で、いちばん振幅が大きくなる前の立ち上がり位置まで戻す
       let t = k * f;

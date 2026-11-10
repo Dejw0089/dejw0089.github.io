@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Void Timer | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; transition: background 2s; user-select: none; }
   body.void { background: #000; }
@@ -25,7 +25,7 @@
   <button id="start" data-i18n="start"></button>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'kyomu';
 const T = {
@@ -56,7 +56,7 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const timeEl = document.getElementById('time'), say = document.getElementById('say'), rec = document.getElementById('rec'), start = document.getElementById('start');
-let t0 = 0, raf = 0, armed = false;
+let t0 = 0, raf = 0, armed = false, quickRun = 0;
 function showRec() { rec.textContent = L.rec(FZ.stat(APP, 'best'), FZ.stat(APP, 'total')); }
 showRec();
 
@@ -75,11 +75,15 @@ function tick() {
   for (const [sec, l] of L.lines) if (s >= sec) say.textContent = l;
   raf = requestAnimationFrame(tick);
 }
-function fail(reason) {
+function fail(reason, kind) {
   if (!armed) return;
   armed = false;
   cancelAnimationFrame(raf);
   const s = Math.floor((performance.now() - t0) / 1000);
+  if (kind === 'key') FZ.add(APP, 'keyFails', 1);
+  if (kind === 'away') FZ.add(APP, 'away', 1);
+  quickRun = s < 1 ? quickRun + 1 : 0;                       // 1秒もたずに負けた回数（連続）
+  FZ.max(APP, 'quickStreak', quickRun);
   FZ.max(APP, 'best', s);
   FZ.add(APP, 'total', s);
   document.body.classList.remove('void');
@@ -89,9 +93,9 @@ function fail(reason) {
 }
 addEventListener('pointermove', () => fail(L.moved));
 addEventListener('pointerdown', () => fail(L.touched));
-addEventListener('keydown', () => fail(L.key));
+addEventListener('keydown', () => fail(L.key, 'key'));
 addEventListener('wheel', () => fail(L.wheel));
-document.addEventListener('visibilitychange', () => { if (document.hidden) fail(L.away); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) fail(L.away, 'away'); });
 FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); showRec(); if (!armed) start.textContent = L.start; });
 </script>
 </body>

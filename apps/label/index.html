@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Label Peel | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   .bottle { width: min(84vw, 360px); height: 150px; margin: 0 auto; border-radius: 40px; position: relative;
@@ -28,7 +28,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'label';
 const TEAR = 1.5;   // これより速く（px/ms）引っぱるとちぎれる
@@ -52,7 +52,7 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const label = document.getElementById('label'), pct = document.getElementById('pct'), say = document.getElementById('say'), rec = document.getElementById('rec');
-let peeling = false, startX = 0, lastX = 0, lastT = 0, progress = 0;
+let peeling = false, startX = 0, lastX = 0, lastT = 0, progress = 0, tearRun = 0;
 function show() { rec.textContent = L.rec(FZ.stat(APP, 'labels'), FZ.stat(APP, 'tears')); }
 function paint() { label.style.setProperty('--peel', (progress * 100).toFixed(1) + '%'); pct.textContent = Math.floor(progress * 100) + '%'; }
 function reset() { progress = 0; label.classList.remove('torn'); paint(); }
@@ -72,6 +72,7 @@ window.addEventListener('pointermove', e => {
     peeling = false;
     label.classList.add('torn');
     FZ.add(APP, 'tears', 1);
+    FZ.max(APP, 'tearStreak', ++tearRun);
     say.textContent = L.torn;
     show();
     return;
@@ -81,12 +82,16 @@ window.addEventListener('pointermove', e => {
   paint();
   if (progress >= 1) {
     peeling = false;
+    tearRun = 0;
     FZ.add(APP, 'labels', 1);
     say.textContent = L.done;
     show();
   }
 });
-['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => { peeling = false; }));
+['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => {
+  if (peeling && progress >= 0.3) FZ.add(APP, 'giveUps', 1);   // 途中まで剥がして、あきらめた
+  peeling = false;
+}));
 show();
 FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
 </script>

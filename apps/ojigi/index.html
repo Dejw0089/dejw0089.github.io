@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Bow-Off | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   .duel { display: flex; justify-content: center; gap: 40px; font-size: 72px; line-height: 1; height: 100px; align-items: flex-end; }
@@ -28,7 +28,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'ojigi';
 const T = {
@@ -54,7 +54,7 @@ FZ.langToggle(document.getElementById('right'));
 
 const me = document.getElementById('me'), them = document.getElementById('them'), sec = document.getElementById('sec');
 const say = document.getElementById('say'), rec = document.getElementById('rec'), btn = document.getElementById('bow');
-let bowing = false, t0 = 0, riseAt = 0, tick = null;
+let bowing = false, t0 = 0, riseAt = 0, tick = null, loseRun = 0;
 function show() { rec.textContent = L.rec(FZ.stat(APP, 'wins'), FZ.stat(APP, 'losses'), FZ.stat(APP, 'best')); }
 function update() {
   const s = (performance.now() - t0) / 1000;
@@ -78,12 +78,15 @@ function release() {
   const s = Math.round((performance.now() - t0) / 100) / 10;
   me.classList.remove('bowing'); them.classList.remove('bowing');
   sec.textContent = s.toFixed(1);
+  if (s < 0.3) FZ.add(APP, 'quickBows', 1);                  // お辞儀ではなく会釈
   if (s >= riseAt) {
+    loseRun = 0;
     FZ.add(APP, 'wins', 1);
     FZ.max(APP, 'best', s);
     say.textContent = L.win(s);
   } else {
     FZ.add(APP, 'losses', 1);
+    FZ.max(APP, 'loseStreak', ++loseRun);
     say.textContent = L.lose(s);
   }
   show();

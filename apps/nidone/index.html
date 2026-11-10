@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Snooze | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   .bed { font-size: 84px; line-height: 1; }
@@ -28,7 +28,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'nidone';
 const T = {
@@ -55,13 +55,14 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const minsEl = document.getElementById('mins'), say = document.getElementById('say'), rec = document.getElementById('rec');
-let mins = 0, snoozes = 0;
+let mins = 0, snoozes = 0, caughtRun = 0;
 function paint() { minsEl.innerHTML = mins + '<small> min</small>'; }
 function show() { rec.textContent = L.rec(FZ.stat(APP, 'minutes'), FZ.stat(APP, 'best'), FZ.stat(APP, 'caught')); }
 document.getElementById('snooze').onclick = () => {
   const risk = 0.05 + 0.07 * snoozes;          // スヌーズするほど電話が来やすい
   if (Math.random() < risk) {
     FZ.add(APP, 'caught', 1);
+    FZ.max(APP, 'caughtStreak', ++caughtRun);
     say.textContent = L.caught;
     mins = 0; snoozes = 0;
   } else {
@@ -73,6 +74,8 @@ document.getElementById('snooze').onclick = () => {
 document.getElementById('wake').onclick = () => {
   if (!mins) return;
   FZ.add(APP, 'minutes', mins);
+  if (mins === 5) FZ.add(APP, 'honest', 1);                    // 1回だけスヌーズして起きた
+  caughtRun = 0;
   FZ.max(APP, 'best', mins);
   say.textContent = L.up(mins);
   mins = 0; snoozes = 0;

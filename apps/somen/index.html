@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Somen Slide | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { overflow: hidden; user-select: none; -webkit-user-select: none; display: grid; place-items: center; text-align: center; }
   #hud { font-family: 'DotGothic16', monospace; display: flex; gap: 28px; justify-content: center; align-items: baseline; }
@@ -53,7 +53,7 @@
   <button id="go" data-i18n="go"></button>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'somen';
 const ROUND = 30;
@@ -139,16 +139,22 @@ function spawn() {
   items.push(it);
 }
 
+let junkRun = 0, touchedJunk = false;
 function grab(it) {
   if (!running || it.dead) return;
   it.dead = true;
   if (it.kind === 'junk') {
+    junkRun++;
+    touchedJunk = true;
+    FZ.max(APP, 'junkStreak', junkRun);
+    if (it.junk.e === '👴') FZ.add(APP, 'ojisan', 1);
     score = Math.max(0, score - 1);
     it.el.classList.add('bad');
     say.textContent = it.junk[FZ.lang()] || it.junk.en;
     pop(it.x, it.y - 10, '-1', true);
     blip(false);
   } else {
+    junkRun = 0;
     const pts = it.kind === 'gold' ? 5 : 1;
     score += pts;
     FZ.add(APP, 'somen', pts);
@@ -186,7 +192,7 @@ function loop() {
 
 function start() {
   items.forEach(i => i.el.remove());
-  items = []; score = 0; missed = 0;
+  items = []; score = 0; missed = 0; junkRun = 0; touchedJunk = false;
   scoreEl.textContent = '0';
   say.textContent = '';
   go.hidden = true;
@@ -199,6 +205,7 @@ function finish() {
   running = false;
   timeEl.textContent = '0.0';
   FZ.max(APP, 'best', score);
+  if (score >= 10 && !touchedJunk) FZ.add(APP, 'clean', 1);   // そうめん以外に一度も触れずに10点以上
   say.textContent = L.result(score, missed);
   go.textContent = L.again;
   go.hidden = false;

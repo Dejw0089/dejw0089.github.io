@@ -8,7 +8,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#f7f6f2">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <script>
   // 描画前に言語を決めておく（ちらつき防止）
@@ -159,7 +159,7 @@
   .tempo[aria-selected="true"] { background: var(--tc); color: #1b1030; }
   .tempo:not([aria-selected="true"]):hover { color: var(--fg); }
   .tempo:disabled { cursor: wait; }
-  .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
+  .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-top: 14px; }
   .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   .presets .lbl { font-size: 13px; color: var(--muted); }
   .preset { font: inherit; font-size: 13px; text-align: left; line-height: 1.25; border-radius: 10px; padding: 7px 11px; cursor: pointer;
@@ -172,8 +172,8 @@
   #oncount.full { animation: nope .3s; }
   @keyframes nope { 25% { translate: -4px 0; } 75% { translate: 4px 0; } }
   #groovemsg { font-size: 13px; color: #ff8fa3; }
-  .trk { border-radius: 12px; padding: 12px; border: 3px solid #3a3450; background: #15121f; text-align: left;
-         color: var(--fg); font: inherit; cursor: pointer; min-height: 74px; }
+  .trk { border-radius: 12px; padding: 10px 12px; border: 3px solid #3a3450; background: #15121f; text-align: left;
+         color: var(--fg); font: inherit; font-size: 14px; cursor: pointer; min-height: 58px; }
   .trk .n { font-weight: 800; }
   .trk .h { color: var(--muted); font-size: 12px; margin-top: 4px; }
   .trk.on { border-color: #ffe066; background: #2b2410; box-shadow: 0 0 18px #ffe06655; }
@@ -298,7 +298,7 @@
   </section>
 </main>
 
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const T = {
   en: {
@@ -314,7 +314,7 @@ const T = {
     giftAriaOpen: 'Open the assortment of uselessness', giftAriaClose: 'Close the assortment',
     boxName: 'The Useless Corner',
     intent: 'I made this because I think people are happiest when they have room for useless things.',
-    tagline: 'A button, natto, the void, flowing noodles, rubber stamps and a cat.<br>Play them to collect sounds, which slowly turn into a groove.',
+    tagline: 'Play them to collect sounds, which slowly turn into a groove.',
     apps: 'Apps', appsSub: 'none of them mean anything',
     groove: 'Groove Machine', sounds: 'sounds',
     play: '▶ Play', stop: '■ Stop', loading: '…loading', noSounds: 'No sounds yet. Play the apps (or cheat).',
@@ -344,7 +344,7 @@ const T = {
     giftAriaOpen: '無駄の詰め合わせを開ける', giftAriaClose: '詰め合わせを閉じる',
     boxName: '無駄コーナー',
     intent: '人は、無駄なことができるくらいの余裕があると幸せだと思うので、作っています。',
-    tagline: 'ボタン、納豆、虚無、流しそうめん、ハンコ、猫。<br>遊ぶと音源がたまって、だんだんグルーヴになる。',
+    tagline: '遊ぶと音源がたまって、だんだんグルーヴになる。',
     apps: 'アプリ', appsSub: 'どれも意味はない',
     groove: 'グルーヴ機', sounds: '音源',
     play: '▶ 鳴らす', stop: '■ 止める', loading: '…読み込み中', noSounds: 'まだ音源がない。アプリで遊べ（またはズルしろ）',

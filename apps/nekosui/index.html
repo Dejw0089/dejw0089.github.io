@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Cat Sniffing | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden;
          transition: background .2s; }
@@ -32,7 +32,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'nekosui';
 const T = {
@@ -66,7 +66,7 @@ const $ = id => document.getElementById(id);
 const cat = $('cat'), sec = $('sec'), say = $('say'), rec = $('rec');
 const pick = a => a[Math.floor(Math.random() * a.length)];
 
-let sniffing = false, t0 = 0, patience = 0, tick = null, lastSmell = 0, cooldown = false;
+let sniffing = false, t0 = 0, patience = 0, tick = null, lastSmell = 0, cooldown = false, scratchRun = 0;
 
 // ---- 音：吸う音（ノイズ）と、シャーッ ----
 let ctx = null, breath = null;
@@ -141,7 +141,9 @@ function end() {
   cat.classList.remove('sniffing');
   cat.textContent = '😺';
   const s = (performance.now() - t0) / 1000;
-  if (s < 0.5) { say.textContent = L.tooShort; sec.textContent = ''; return; }
+  if (s < 0.5) { FZ.add(APP, 'tiny', 1); say.textContent = L.tooShort; sec.textContent = ''; return; }
+  scratchRun = 0;
+  if (s / patience >= 0.85) FZ.add(APP, 'closeCalls', 1);       // 怒る寸前（😾）で離した
   const v = Math.round(s * 10) / 10;
   FZ.add(APP, 'total', v);
   FZ.max(APP, 'best', v);
@@ -154,6 +156,7 @@ function scratch() {
   breathOff();
   hiss();
   FZ.add(APP, 'scratches', 1);
+  FZ.max(APP, 'scratchStreak', ++scratchRun);
   cat.classList.remove('sniffing');
   cat.textContent = '🙀';
   sec.textContent = '0.0';

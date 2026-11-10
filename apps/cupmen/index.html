@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Cup Noodle Clock | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   .cup { font-size: 96px; line-height: 1; }
@@ -29,7 +29,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'cupmen';
 const TARGET = 30;   // 3分は長いので30秒麺
@@ -70,6 +70,8 @@ eat.onclick = () => {
   const s = (performance.now() - t0) / 1000;
   const sc = Math.max(0, Math.round(100 - Math.abs(s - TARGET) * 20));
   FZ.add(APP, 'bowls', 1);
+  if (s < 10) FZ.add(APP, 'hungry', 1);                        // 10秒もたなかった
+  if (s >= 60) FZ.add(APP, 'forgot', 1);                       // 1分以上放置した
   FZ.max(APP, 'best', sc);
   scoreEl.textContent = sc;
   say.textContent = L.result(s, sc);

@@ -29,7 +29,7 @@ describe('stats and storage', () => {
 });
 
 describe('sound drops', () => {
-  const muda = drops.filter(d => d.app === 'muda-button');
+  const muda = drops.filter(d => d.app === 'muda-button' && d.stat === 'presses');   // 押した回数の到達点
 
   test('crossing a threshold drops exactly one random locked sound and remembers which', async () => {
     page = await openPage(APP, { random: () => 0 });
@@ -250,5 +250,15 @@ describe('coming back from a game', () => {
     page.close();
     page = await openPage('/');
     expect(page.window.sessionStorage.getItem('fz-from-app')).toBeNull();
+  });
+});
+
+describe('drop strip with many thresholds', () => {
+  test('stays on one line and scrolls sideways inside itself', async () => {
+    page = await openPage('/apps/muda-button/');
+    expect(page.$$('.fz-drop').length).toBe(6);
+    const cs = page.window.getComputedStyle(page.$('.fz-drops'));
+    expect(cs.flexWrap).toBe('nowrap');
+    expect(cs.overflowX).toBe('auto');
   });
 });

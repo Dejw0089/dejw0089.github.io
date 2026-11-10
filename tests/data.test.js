@@ -177,3 +177,34 @@ describe('loops that must sit on the grid', () => {
     }
   });
 });
+
+describe('doubled sounds', () => {
+  const { onsets } = require('./helpers/wav');
+  test('84 sounds for the same 18 games', () => {
+    expect(apps.length).toBe(18);
+    expect(sounds.length).toBe(84);
+    expect(drops.length).toBe(84);
+    for (const bpm of TEMPOS) expect(sounds.filter(s => s.bpm === bpm).length).toBeGreaterThanOrEqual(20);
+  });
+  test('original games have 6 thresholds, the later ones 4', () => {
+    const per = id => drops.filter(d => d.app === id).length;
+    for (const id of ['muda-button', 'natto', 'kyomu', 'somen', 'hanko', 'nekosui']) expect(per(id)).toBe(6);
+    for (const a of apps.slice(6)) expect(per(a.id)).toBe(4);
+  });
+  test('thresholds of a game never repeat and every one is reachable in order', () => {
+    for (const a of apps) {
+      const keys = drops.filter(d => d.app === a.id).map(d => d.stat + ':' + d.gte);
+      expect(new Set(keys).size).toBe(keys.length);
+    }
+  });
+  // 和音やパッドのように鳴りっぱなしの音は、音どうしの干渉でゆっくり膨らむだけなので対象外
+  const SUSTAINED = ['y120-epiano', 'y120-strings', 'y180-piano', 'y180-pad2', 'y1280-pad'];
+  test.each(sounds.filter(s => s.id.startsWith('y') && !SUSTAINED.includes(s.id)).map(s => [s.id, s]))('%s: every hit lands on the grid', (id, s) => {
+    const unit = s.bpm === 1280 ? 1 : 0.25;                  // 1280 は1拍、ほかは16分
+    const grid = 60 / s.bpm * unit;
+    for (const t of onsets(path.join(ROOT, s.file), { quiet: 0.05 })) {   // 持続音の揺れは数えない
+      const off = t % grid;
+      expect(Math.min(off, grid - off)).toBeLessThan(0.01);                // 10ms は聞き分けられない
+    }
+  });
+});

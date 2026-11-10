@@ -5,94 +5,145 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Packed Train | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
-  #car { width: min(90vw, 400px); height: 220px; margin: 0 auto; border-radius: 16px; position: relative; touch-action: none;
-         background: linear-gradient(#3d5a80, #293241); overflow: hidden; }
-  #car::before { content: ''; position: absolute; left: 0; right: 0; top: 24px; height: 4px; background: #98c1d9; }
-  #person { position: absolute; left: 50%; bottom: 10px; font-size: 80px; line-height: 1; translate: -50% 0; transform-origin: 50% 100%; }
-  #time { font: 36px 'DotGothic16', monospace; color: #98c1d9; margin-top: 10px; }
-  #start { margin-top: 8px; font: 800 20px 'M PLUS Rounded 1c', sans-serif; padding: 12px 30px; border-radius: 999px; border: none;
-           background: #577590; color: #fff; cursor: pointer; }
+  #car { width: min(90vw, 400px); height: 180px; margin: 0 auto; border-radius: 16px; position: relative; touch-action: none; cursor: pointer;
+         background: linear-gradient(#3d5a80, #293241); overflow: hidden; transition: translate .15s; }
+  #car::before { content: ''; position: absolute; left: 0; right: 0; top: 22px; height: 4px; background: #98c1d9; }
+  #person { position: absolute; left: 50%; bottom: 8px; font-size: 76px; line-height: 1; translate: -50% 0; transform-origin: 50% 100%; }
+  #lurch { position: absolute; top: 34px; left: 0; right: 0; font: 22px 'DotGothic16', monospace; color: #ffd166; min-height: 1em; }
+  /* バランス：真ん中の緑の範囲から出ると倒れる */
+  #meter { position: relative; width: min(80vw, 320px); height: 14px; margin: 14px auto 0; border-radius: 999px;
+           background: linear-gradient(90deg, #c44536, #f4a261 20%, #43aa8b 38%, #43aa8b 62%, #f4a261 80%, #c44536); }
+  #mark { position: absolute; top: -5px; width: 6px; height: 24px; margin-left: -3px; left: 50%; background: #fff6e0; border-radius: 3px; }
+  #time { font: 32px 'DotGothic16', monospace; color: #98c1d9; margin-top: 8px; }
+  .ctl { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 8px; }
+  .ctl button { font: 800 20px 'M PLUS Rounded 1c', sans-serif; padding: 10px 22px; border-radius: 999px; border: none; cursor: pointer; touch-action: none; }
+  #left, #right { background: #577590; color: #fff; min-width: 70px; }
+  #left.on, #right.on { background: #98c1d9; color: #12101a; }
+  #start { background: #ffd166; color: #12101a; }
   #start[hidden] { display: none; }
-  #say { font-weight: 800; font-size: 16px; min-height: 2.6em; padding: 0 20px; margin-top: 10px; }
+  #say { font-weight: 800; font-size: 15px; min-height: 2.6em; padding: 0 20px; margin-top: 8px; }
   #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
 </style>
 </head>
 <body>
-<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right-bar"><span data-i18n="title"></span></span></div>
 <div>
-  <div id="car"><div id="person">🧍</div></div>
+  <div id="car"><div id="lurch"></div><div id="person">🧍</div></div>
+  <div id="meter" data-x="0"><div id="mark"></div></div>
   <div id="time">0.0</div>
-  <button id="start" data-i18n="start"></button>
+  <div class="ctl">
+    <button id="left" aria-label="lean left">◀</button>
+    <button id="start" data-i18n="start"></button>
+    <button id="right" aria-label="lean right">▶</button>
+  </div>
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'tsurikawa';
-const FALL = 45;   // これ以上傾いたら倒れる（度）
+const K = 3;          // 踏ん張る強さ（揺れの最大より強い）
+const DAMP = 1.5;     // 足の踏ん張り（勝手に少しずつ止まる）
 const T = {
   en: {
-    back: '← Back', title: 'Packed Train', start: 'Board the train',
-    intro: 'The train sways. Move your finger left and right inside the car to stay upright. No straps left.',
+    back: '← Back', title: 'Packed Train', start: 'Board',
+    intro: 'The train lurches. Lean the other way to stay up: ← → or A / D, the ◀ ▶ buttons, or press the left / right side of the car.',
+    lurchL: '← lurch', lurchR: 'lurch →',
     fell: s => 'You fell onto a stranger after ' + s + 's. Sumimasen.',
-    rec: (b, t) => 'Best ' + b + 's / Total ' + t + 's',
+    rec: (b, t, r) => 'Best ' + b + 's / Total ' + t + 's / Rides ' + r,
   },
   ja: {
     back: '← 戻る', title: '満員電車', start: '乗車する',
-    intro: '電車が揺れます。車内で指を左右に動かして、倒れないようにしてください。つり革は空いていません。',
+    intro: '電車がガタンと揺れます。反対側に踏ん張って立っていてください。←→ か A・D キー、◀ ▶ ボタン、車内の左右を押す、のどれでも。',
+    lurchL: '← ガタン', lurchR: 'ガタン →',
     fell: s => s + '秒で知らない人に倒れかかりました。すみません。',
-    rec: (b, t) => '最長 ' + b + '秒 / 合計 ' + t + '秒',
+    rec: (b, t, r) => '最長 ' + b + '秒 / 合計 ' + t + '秒 / 乗車 ' + r + '回',
   },
 };
 let L = FZ.apply(T);
 function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
 setTitle();
-FZ.langToggle(document.getElementById('right'));
+FZ.langToggle(document.getElementById('right-bar'));
 
-const car = document.getElementById('car'), person = document.getElementById('person'), timeEl = document.getElementById('time');
-const start = document.getElementById('start'), say = document.getElementById('say'), rec = document.getElementById('rec');
-let running = false, t0 = 0, last = 0, angle = 0, omega = 0, gust = 0, push = 0, tick = null;
-function show() { rec.textContent = L.rec(FZ.stat(APP, 'best'), Math.round(FZ.stat(APP, 'total') * 10) / 10); }
-car.addEventListener('pointermove', e => {
-  const r = car.getBoundingClientRect();
-  const w = r.width || 400;
-  push = Math.max(-1, Math.min(1, (e.clientX - (r.left + w / 2)) / (w / 2)));
-});
+const $ = id => document.getElementById(id);
+const car = $('car'), person = $('person'), meter = $('meter'), mark = $('mark'), lurchEl = $('lurch');
+const timeEl = $('time'), start = $('start'), say = $('say'), rec = $('rec');
+let running = false, t0 = 0, last = 0, x = 0, v = 0, force = 0, nextLurch = 0, tick = null;
+// 押している方向：キー・ボタン・車内の左右のどれでもよい（-1 = 左に踏ん張る, +1 = 右）
+const held = { key: 0, btn: 0, car: 0 };
+const input = () => Math.sign(held.key || held.btn || held.car);
+
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'best'), Math.round(FZ.stat(APP, 'total') * 10) / 10, FZ.stat(APP, 'rides')); }
+function paint() {
+  meter.dataset.x = x.toFixed(3);
+  mark.style.left = (50 + Math.max(-1, Math.min(1, x)) * 50) + '%';
+  person.style.transform = 'rotate(' + (x * 40).toFixed(1) + 'deg)';
+  $('left').classList.toggle('on', input() < 0);
+  $('right').classList.toggle('on', input() > 0);
+}
+function lurch(elapsed) {
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  force = dir * (0.6 + Math.random() * 0.8) * Math.min(2.1, 1 + elapsed / 25);   // だんだん揺れが強くなる（踏ん張る力 K よりは弱い）
+  nextLurch = elapsed + 1 + Math.random();
+  lurchEl.textContent = dir < 0 ? L.lurchL : L.lurchR;
+  car.style.translate = (dir * 6) + 'px 0';
+  setTimeout(() => { car.style.translate = ''; }, 150);
+}
 start.onclick = () => {
   running = true;
   start.hidden = true;
-  angle = 0; omega = 0; gust = 0; push = 0;
+  x = 0; v = 0;
   t0 = last = performance.now();
+  FZ.add(APP, 'rides', 1);
   say.textContent = '';
+  lurch(0);
+  paint();
   tick = setInterval(step, 50);
 };
 function step() {
   const now = performance.now();
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
-  gust += (Math.random() - 0.5) * 80 * dt;            // 電車の揺れ（だんだん溜まる）
-  gust *= 0.98;
-  omega += (angle * 1.2 + gust - push * 60) * dt;     // 傾いているほど倒れやすい。指で反対に踏ん張る
-  omega *= 0.97;
-  angle += omega * dt;
-  person.style.transform = 'rotate(' + angle.toFixed(1) + 'deg)';
   const s = (now - t0) / 1000;
+  if (s >= nextLurch) lurch(s);
+  v += (force + input() * K - v * DAMP) * dt;
+  x += v * dt;
   timeEl.textContent = s.toFixed(1);
-  if (Math.abs(angle) > FALL) fall(s);
+  paint();
+  if (Math.abs(x) > 1) fall(s);
 }
 function fall(s) {
   clearInterval(tick);
   running = false;
-  const v = Math.round(s * 10) / 10;
-  FZ.max(APP, 'best', v);
-  FZ.add(APP, 'total', v);
-  say.textContent = L.fell(v);
+  const sec = Math.round(s * 10) / 10;
+  FZ.max(APP, 'best', sec);
+  FZ.add(APP, 'total', sec);
+  if (sec < 3) FZ.add(APP, 'clumsy', 1);
+  say.textContent = L.fell(sec);
+  lurchEl.textContent = '';
   start.hidden = false;
   show();
 }
+
+// ---- 操作（PC・スマホのどちらでも） ----
+const KEYS = { ArrowLeft: -1, a: -1, A: -1, ArrowRight: 1, d: 1, D: 1 };
+document.addEventListener('keydown', e => { if (KEYS[e.key]) { e.preventDefault(); held.key = KEYS[e.key]; } });
+document.addEventListener('keyup', e => { if (KEYS[e.key] && held.key === KEYS[e.key]) held.key = 0; });
+for (const [id, dir] of [['left', -1], ['right', 1]]) {
+  $(id).addEventListener('pointerdown', e => { e.preventDefault(); held.btn = dir; });
+}
+car.addEventListener('pointerdown', e => {
+  const r = car.getBoundingClientRect();
+  held.car = e.clientX < r.left + (r.width || 400) / 2 ? -1 : 1;
+});
+['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => { held.btn = 0; held.car = 0; }));
+window.addEventListener('blur', () => { held.key = 0; held.btn = 0; held.car = 0; });
+document.querySelectorAll('button').forEach(b => b.addEventListener('contextmenu', e => e.preventDefault()));
+
+paint();
 show();
 FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
 </script>

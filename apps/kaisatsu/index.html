@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Ticket Gate | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   .gate { width: min(70vw, 260px); margin: 0 auto; background: #2d3142; border-radius: 14px; padding: 18px; position: relative; }
@@ -28,7 +28,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'kaisatsu';
 const MIN = 300, MAX = 900;   // ちょうどいいタッチ（ms）
@@ -54,7 +54,7 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const card = document.getElementById('card'), gate = document.getElementById('gate'), say = document.getElementById('say'), rec = document.getElementById('rec');
-let t0 = 0, touching = false, streak = 0, ctx = null;
+let t0 = 0, touching = false, streak = 0, ctx = null, shortRun = 0;
 function beep(ok) {
   try {
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
@@ -74,6 +74,7 @@ function release() {
   touching = false;
   const d = performance.now() - t0;
   if (d >= MIN && d <= MAX) {
+    shortRun = 0;
     streak++;
     FZ.add(APP, 'passes', 1);
     FZ.max(APP, 'streak', streak);
@@ -82,6 +83,8 @@ function release() {
     beep(true);
   } else {
     streak = 0;
+    if (d < MIN) FZ.max(APP, 'shortStreak', ++shortRun);
+    else { shortRun = 0; FZ.add(APP, 'longOnes', 1); }
     gate.className = 'gate ng';
     say.textContent = d < MIN ? L.short : L.long;
     beep(false);

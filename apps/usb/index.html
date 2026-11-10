@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>USB First Try | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   .scene { display: flex; align-items: center; justify-content: center; gap: 6px; height: 120px; }
@@ -31,7 +31,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'usb';
 const T = {
@@ -56,12 +56,13 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const plug = document.getElementById('plug'), say = document.getElementById('say'), rec = document.getElementById('rec'), btn = document.getElementById('insert');
-let tries = 0, busy = false;
+let tries = 0, busy = false, firstRun = 0;
 function show() { rec.textContent = L.rec(FZ.stat(APP, 'plugs'), FZ.stat(APP, 'firstTry')); }
 btn.onclick = () => {
   if (busy) return;
   tries++;
   if (Math.random() < 0.5) {
+    FZ.max(APP, 'failStreak', tries);                         // 何回続けて逆だったか
     say.textContent = L.fail[Math.min(tries, L.fail.length) - 1];
     plug.classList.toggle('flip');
     plug.classList.remove('shake'); void plug.offsetWidth; plug.classList.add('shake');
@@ -70,6 +71,8 @@ btn.onclick = () => {
   plug.classList.add('in');
   FZ.add(APP, 'plugs', 1);
   if (tries === 1) FZ.add(APP, 'firstTry', 1);
+  firstRun = tries === 1 ? firstRun + 1 : 0;
+  FZ.max(APP, 'firstStreak', firstRun);
   say.textContent = tries === 1 ? L.first : L.later(tries);
   tries = 0;
   busy = true;

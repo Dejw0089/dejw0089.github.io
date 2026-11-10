@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Useless Button | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; overflow: hidden; user-select: none; -webkit-user-select: none; }
   .wrap { text-align: center; }
@@ -29,7 +29,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="n"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'muda-button';
 const T = {
@@ -76,9 +76,20 @@ function beep() {
 function show() { n.textContent = L.total(FZ.stat(APP, 'presses')); }
 show();
 
-btn.addEventListener('pointerdown', () => btn.classList.add('down'));
+let downAt = 0, lastPress = 0, recent = [];
+btn.addEventListener('pointerdown', () => { btn.classList.add('down'); downAt = performance.now(); });
+// 長押し：3秒押しっぱなし
+window.addEventListener('pointerup', () => {
+  if (downAt && performance.now() - downAt >= 3000) FZ.add(APP, 'longPress', 1);
+  downAt = 0;
+});
 ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, () => btn.classList.remove('down')));
 btn.addEventListener('click', () => {
+  const now = performance.now();
+  if (lastPress) FZ.max(APP, 'patience', Math.floor((now - lastPress) / 1000));   // 前に押してから何秒あけたか
+  lastPress = now;
+  recent = recent.filter(t => now - t < 1000).concat(now);
+  FZ.max(APP, 'burst', recent.length);                                            // 1秒以内に何回押したか
   FZ.add(APP, 'presses', 1);
   const c = FZ.stat(APP, 'presses');
   say.textContent = L.milestones[c] || L.lines[Math.floor(Math.random() * L.lines.length)];

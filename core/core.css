@@ -67,18 +67,21 @@ body > .fz-lang { position: fixed; top: 12px; right: 12px; z-index: 20; }
 }
 
 /* アプリのページ：そのゲームで出る音源の到達点（ヘッダーの下に固定。スクロールさせない） */
+/* 到達点が増えても1行のまま。はみ出した分は帯の中だけ横にスクロールする */
 .fz-drops {
-  position: fixed; top: 52px; left: 0; right: 0; z-index: 9; pointer-events: none;
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 0 10px;
+  position: fixed; top: 52px; left: 0; right: 0; z-index: 9;
+  display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 5px; padding: 0 10px 4px;
+  scrollbar-width: thin; -webkit-overflow-scrolling: touch;
   font: 12px/1.3 'M PLUS Rounded 1c', system-ui, sans-serif;
 }
-.fz-drops-head { font-family: 'DotGothic16', monospace; color: #ffe066; padding: 4px 4px; }
+.fz-drops-head { font-family: 'DotGothic16', monospace; color: #ffe066; padding: 4px 4px; flex: none; }
 .fz-drop {
   background: #1e1a2bdd; border: 1px solid #3a3450; border-radius: 999px; padding: 3px 10px;
-  color: var(--muted); white-space: nowrap;
+  color: var(--muted); white-space: nowrap; flex: none;
 }
 .fz-drop.got { color: #ffe066; border-color: #ffe06655; }
 body.void .fz-drops { display: none; }
 body.fz-has-drops { padding-top: var(--fz-top, 110px); }
 .fz-drop.fresh { color: #1b1030; background: #ffe066; border-color: #ffe066; animation: fz-fresh 1.2s ease-out 3; }
 @keyframes fz-fresh { 50% { box-shadow: 0 0 14px #ffe066; } }
+.fz-drops::before, .fz-drops::after { content: ''; margin: auto; }

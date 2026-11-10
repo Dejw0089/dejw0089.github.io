@@ -27,10 +27,11 @@ describe.each(apps.map(a => [a.id, a]))('%s page basics', (id, app) => {
 describe('Useless Button', () => {
   test('each press is counted, and press 10 drops a sound', async () => {
     page = await openPage('/apps/muda-button/', { lang: 'ja' });
-    for (let i = 0; i < 9; i++) page.$('#btn').click();
+    const press = () => { page.clock.ms += 300; page.$('#btn').click(); };   // ゆっくり押す（連打の到達点を踏まないように）
+    for (let i = 0; i < 9; i++) press();
     expect(page.FZ.stat('muda-button', 'presses')).toBe(9);
     expect(page.FZ.unlocked().length).toBe(0);
-    page.$('#btn').click();
+    press();
     expect(page.text('#say')).toBe('10回目。何か貰えるかもしれません（貰えます）');
     expect(page.FZ.unlocked().length).toBe(1);
     expect(page.text('#n')).toBe('累計 10 回');
@@ -308,13 +309,55 @@ describe('Cup Noodle Clock', () => {
 });
 
 describe('Packed Train', () => {
-  test('without balancing you eventually fall; time standing is recorded', async () => {
-    page = await openPage('/apps/tsurikawa/', { random: () => 1 });   // ずっと同じ向きに揺れる
+  // 1ティック = 偽の時計を進めて、ゲームのタイマーを1回動かす
+  const step = async (p, ms = 100) => { p.clock.ms += ms; await p.wait(60); };
+  const x = p => Number(p.$('#meter').dataset.x);
+  const key = (p, type, k) => p.window.document.dispatchEvent(new p.window.KeyboardEvent(type, { key: k, bubbles: true }));
+  const fallen = p => !p.$('#start').hidden;
+
+  test('doing nothing, the train throws you over; time standing is recorded', async () => {
+    page = await openPage('/apps/tsurikawa/', { random: () => 0.99 });    // ずっと右へ揺れる
     page.$('#start').click();
-    for (let i = 0; i < 40 && page.$('#start').hidden; i++) { page.clock.ms += 500; await page.wait(60); }
-    expect(page.$('#start').hidden).toBe(false);
+    for (let i = 0; i < 60 && !fallen(page); i++) await step(page);
+    expect(fallen(page)).toBe(true);
     expect(page.FZ.stat('tsurikawa', 'best')).toBeGreaterThan(0);
     expect(page.FZ.stat('tsurikawa', 'total')).toBeGreaterThan(0);
+    expect(page.FZ.stat('tsurikawa', 'rides')).toBe(1);
+  });
+  test('on a PC, the arrow keys let you lean against the sway and stay up', async () => {
+    page = await openPage('/apps/tsurikawa/', { random: () => 0.99 });
+    page.$('#start').click();
+    let held = null;
+    for (let i = 0; i < 100; i++) {                                         // 10秒ぶん
+      const want = x(page) > 0 ? 'ArrowLeft' : 'ArrowRight';               // 傾いた反対側に踏ん張る
+      if (want !== held) { if (held) key(page, 'keyup', held); key(page, 'keydown', want); held = want; }
+      await step(page);
+    }
+    expect(fallen(page)).toBe(false);
+    expect(Math.abs(x(page))).toBeLessThan(1);
+  });
+  test('A / D keys work too', async () => {
+    page = await openPage('/apps/tsurikawa/', { random: () => 0.99 });
+    page.$('#start').click();
+    key(page, 'keydown', 'a');
+    for (let i = 0; i < 5; i++) await step(page);
+    expect(x(page)).toBeLessThan(0);                                        // 右に揺れていても左へ戻せる
+  });
+  test('the on-screen buttons work by holding them', async () => {
+    page = await openPage('/apps/tsurikawa/', { random: () => 0.99 });
+    page.$('#start').click();
+    page.pointer(page.$('#left'), 'pointerdown');
+    for (let i = 0; i < 5; i++) await step(page);
+    expect(x(page)).toBeLessThan(0);
+    page.pointer(page.window, 'pointerup');
+  });
+  test('falling within 3 seconds counts as clumsy', async () => {
+    page = await openPage('/apps/tsurikawa/', { random: () => 0.99 });
+    page.$('#start').click();
+    key(page, 'keydown', 'ArrowRight');                                     // 揺れと同じ向きに倒れにいく
+    for (let i = 0; i < 30 && !fallen(page); i++) await step(page);
+    expect(fallen(page)).toBe(true);
+    expect(page.FZ.stat('tsurikawa', 'clumsy')).toBe(1);
   });
 });
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Odd Sock | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
   #drawer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: min(90vw, 380px); margin: 0 auto;
@@ -30,7 +30,7 @@
   <div id="say" data-i18n="intro"></div>
   <div id="rec"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'kutsushita';
 const COLORS = ['#f15bb5', '#00bbf9', '#fee440', '#00f5d4', '#9b5de5', '#f8961e'];
@@ -54,7 +54,7 @@ setTitle();
 FZ.langToggle(document.getElementById('right'));
 
 const drawer = document.getElementById('drawer'), say = document.getElementById('say'), rec = document.getElementById('rec');
-let first = null, t0 = 0, busy = false;
+let first = null, t0 = 0, busy = false, wrongRun = 0;
 function show() { rec.textContent = L.rec(FZ.stat(APP, 'pairs'), FZ.stat(APP, 'quick')); }
 function round() {
   // 24種類から11種類を選び、1種類だけ2枚にして12枚
@@ -86,11 +86,13 @@ function choose(b) {
   const a = first;
   first = null;
   a.classList.remove('sel');
-  if (a.dataset.kind !== b.dataset.kind) { say.textContent = L.wrong; return; }
+  if (a.dataset.kind !== b.dataset.kind) { FZ.max(APP, 'wrongStreak', ++wrongRun); say.textContent = L.wrong; return; }
+  wrongRun = 0;
   const ms = performance.now() - t0;
   a.classList.add('found'); b.classList.add('found');
   FZ.add(APP, 'pairs', 1);
   if (ms <= QUICK) FZ.add(APP, 'quick', 1);
+  if (ms >= 30000) FZ.add(APP, 'slowFinds', 1);
   say.textContent = L.found((ms / 1000).toFixed(1));
   busy = true;
   show();

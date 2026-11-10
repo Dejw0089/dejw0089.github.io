@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Natto Stirrer | Yusuke Iwasaki</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/core/core.css?v=8">
+<link rel="stylesheet" href="/core/core.css?v=9">
 <style>
   body { overflow: hidden; user-select: none; -webkit-user-select: none; }
   body.fz-has-drops { padding-top: 0; }  /* 全画面キャンバスなので、帯はその上に重ねるだけ */
@@ -24,7 +24,7 @@
   <div id="msg" data-i18n="intro"></div>
   <div id="total"></div>
 </div>
-<script src="/core/core.js?v=8"></script>
+<script src="/core/core.js?v=9"></script>
 <script>
 const APP = 'natto';
 const T = {
@@ -58,11 +58,12 @@ resize(); addEventListener('resize', resize);
 // 豆
 const beans = Array.from({ length: 46 }, () => ({ a: Math.random() * 6.28, r: Math.random() * 0.8, s: 0.5 + Math.random() * 0.8 }));
 let session = 0, acc = 0, spin = 0, last = null, dragging = false;
+let turnSpin = 0, inDrag = 0, lastDir = 0;   // 1周ぶんの向き・今回の指でまぜた数・前の周の向き
 
 document.getElementById('rot').textContent = L.rot(0);
 
 function angle(e) { return Math.atan2(e.clientY - H / 2, e.clientX - W / 2); }
-cv.addEventListener('pointerdown', e => { dragging = true; last = angle(e); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerdown', e => { dragging = true; last = angle(e); inDrag = 0; lastDir = 0; turnSpin = 0; cv.setPointerCapture(e.pointerId); });
 cv.addEventListener('pointerup', () => { dragging = false; last = null; });
 cv.addEventListener('pointercancel', () => { dragging = false; last = null; });
 cv.addEventListener('pointermove', e => {
@@ -74,9 +75,16 @@ cv.addEventListener('pointermove', e => {
   last = a;
   acc += Math.abs(d);
   spin += d;
+  turnSpin += d;
   while (acc >= Math.PI * 2) {
     acc -= Math.PI * 2;
     session++;
+    const dir = Math.sign(turnSpin) || 1;
+    turnSpin = 0;
+    if (dir < 0) FZ.add(APP, 'reverse', 1);                 // 画面上で反時計回り
+    if (lastDir && dir !== lastDir) FZ.add(APP, 'switches', 1);
+    lastDir = dir;
+    FZ.max(APP, 'longStir', ++inDrag);
     FZ.add(APP, 'rotations', 1);
     rotEl.textContent = L.rot(session);
     if (L.msgs[session]) msgEl.textContent = L.msgs[session];
