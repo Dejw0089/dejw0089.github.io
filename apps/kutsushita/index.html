@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Odd Sock | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  #drawer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: min(90vw, 380px); margin: 0 auto;
+            padding: 12px; background: #2b2540; border-radius: 14px; }
+  .sock { aspect-ratio: 3 / 4; border: 3px solid transparent; border-radius: 10px; background: #1e1a2b; cursor: pointer; padding: 6px;
+          display: grid; place-items: center; }
+  .sock.sel { border-color: #f15bb5; }
+  .sock.found { border-color: #ffe066; }
+  .shape { width: 70%; height: 90%; background: var(--c);
+           clip-path: polygon(15% 0, 65% 0, 65% 58%, 100% 72%, 100% 100%, 38% 100%, 15% 82%); }
+  .p-stripe .shape { background: repeating-linear-gradient(0deg, var(--c) 0 7px, #ffffffaa 7px 11px); }
+  .p-dot .shape { background: radial-gradient(#ffffffaa 22%, transparent 26%) 0 0 / 11px 11px, var(--c); }
+  .p-check .shape { background: repeating-conic-gradient(var(--c) 0 25%, #ffffff88 0 50%) 0 0 / 12px 12px; }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 14px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div id="drawer"></div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'kutsushita';
+const COLORS = ['#f15bb5', '#00bbf9', '#fee440', '#00f5d4', '#9b5de5', '#f8961e'];
+const PATTERNS = ['plain', 'stripe', 'dot', 'check'];
+const QUICK = 5000;
+const T = {
+  en: {
+    back: '← Back', title: 'Odd Sock', intro: 'Twelve socks. Only one pair actually matches. Find it.',
+    wrong: 'Those do not match. You knew that.', found: s => 'A pair! Found in ' + s + 's. The other ten remain single forever.',
+    rec: (p, q) => 'Pairs ' + p + ' / Under 5s ' + q,
+  },
+  ja: {
+    back: '← 戻る', title: '靴下の片割れ', intro: '12足の靴下。本当にそろっているのは一組だけです。見つけてください。',
+    wrong: 'そろっていません。薄々わかっていたはずです。', found: s => 'そろいました！ ' + s + '秒。残りの10足は永遠に片割れです。',
+    rec: (p, q) => '見つけた組 ' + p + ' / 5秒以内 ' + q,
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const drawer = document.getElementById('drawer'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let first = null, t0 = 0, busy = false;
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'pairs'), FZ.stat(APP, 'quick')); }
+function round() {
+  // 24種類から11種類を選び、1種類だけ2枚にして12枚
+  const kinds = [];
+  for (const c of COLORS.keys()) for (const p of PATTERNS) kinds.push(c + '-' + p);
+  for (let i = kinds.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [kinds[i], kinds[j]] = [kinds[j], kinds[i]]; }
+  const pick = kinds.slice(0, 11);
+  const socks = pick.concat(pick[0]);
+  for (let i = socks.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [socks[i], socks[j]] = [socks[j], socks[i]]; }
+  drawer.textContent = '';
+  for (const k of socks) {
+    const [c, p] = k.split('-');
+    const b = document.createElement('button');
+    b.className = 'sock p-' + p;
+    b.dataset.kind = k;
+    b.style.setProperty('--c', COLORS[c]);
+    b.innerHTML = '<span class="shape"></span>';
+    b.setAttribute('aria-label', 'sock');
+    b.addEventListener('click', () => choose(b));
+    drawer.appendChild(b);
+  }
+  first = null;
+  busy = false;
+  t0 = performance.now();
+}
+function choose(b) {
+  if (busy || b === first) return;
+  if (!first) { first = b; b.classList.add('sel'); return; }
+  const a = first;
+  first = null;
+  a.classList.remove('sel');
+  if (a.dataset.kind !== b.dataset.kind) { say.textContent = L.wrong; return; }
+  const ms = performance.now() - t0;
+  a.classList.add('found'); b.classList.add('found');
+  FZ.add(APP, 'pairs', 1);
+  if (ms <= QUICK) FZ.add(APP, 'quick', 1);
+  say.textContent = L.found((ms / 1000).toFixed(1));
+  busy = true;
+  show();
+  setTimeout(round, 900);
+}
+round();
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

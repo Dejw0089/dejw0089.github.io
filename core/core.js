@@ -8,7 +8,7 @@
  */
 (function () {
   // 更新したらここと各HTMLの ?v= を上げる（GitHub Pagesのキャッシュ対策）
-  const V = '7';
+  const V = '8';
   const KEY = 'fuzake-box-v1';
   const blank = () => ({ v: 1, stats: {}, unlocked: [], since: Date.now() });
 
@@ -71,7 +71,7 @@
   // /apps/<id>/ なら自動で出す。スクロールさせないよう、画面上部に固定した1〜2行のチップにする
   const PAGE_APP = (location.pathname.match(/^\/apps\/([^/]+)\//) || [])[1];
   // アプリから戻ったとき、トップは「無駄コーナー」の位置から見せる（箱が開いているときだけ。トップ側で見る）
-  if (PAGE_APP) { try { sessionStorage.setItem('fz-from-app', '1'); } catch (e) {} }
+  if (PAGE_APP) { try { sessionStorage.setItem('fz-from-app', PAGE_APP); } catch (e) {} }   // どのゲームから戻ったか
   let dropsEl = null;
   const freshDrops = new Set();   // このページで今取ったもの（チップを光らせる）
   function fmt(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
@@ -239,6 +239,7 @@
     add, max, stat, set,
     unlocked: () => state.unlocked.slice(),
     rules: () => rulesReady,
+    catalog: () => rulesReady.then(() => data),   // 音源・到達点・おすすめ・同時に鳴らせる数
     unlockAll,
     exportCode, importCode, reset,
     lang: () => lang, setLang, onLang, t, apply, langToggle, V,

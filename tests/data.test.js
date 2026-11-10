@@ -112,3 +112,68 @@ describe('naming', () => {
     for (const f of files) expect(read(f)).not.toMatch(/ふざけ箱|FUZAKE BOX/);
   });
 });
+
+describe('expanded line-up', () => {
+  const unlocks = readJSON('data/unlocks.json');
+  test('there are 18 games', () => {
+    expect(apps.length).toBe(18);
+  });
+  test('every tempo has at least 10 loops', () => {
+    for (const bpm of TEMPOS) expect(sounds.filter(s => s.bpm === bpm).length).toBeGreaterThanOrEqual(10);
+  });
+  test('a maximum number of simultaneous sounds is set', () => {
+    expect(unlocks.maxOn).toBe(6);
+  });
+  test('each tempo has 3 recommended presets of real sounds from that tempo, within the limit', () => {
+    const byId = Object.fromEntries(sounds.map(s => [s.id, s]));
+    for (const bpm of TEMPOS) {
+      const ps = unlocks.presets.filter(p => p.bpm === bpm);
+      expect(ps.length).toBe(3);
+      for (const p of ps) {
+        expect(p.name.en).toBeTruthy();
+        expect(p.name.ja).toBeTruthy();
+        expect(p.sounds.length).toBeGreaterThanOrEqual(2);
+        expect(p.sounds.length).toBeLessThanOrEqual(unlocks.maxOn);
+        expect(new Set(p.sounds).size).toBe(p.sounds.length);
+        for (const id of p.sounds) expect(byId[id] && byId[id].bpm).toBe(bpm);
+      }
+    }
+    expect(new Set(unlocks.presets.map(p => p.id)).size).toBe(unlocks.presets.length);
+  });
+});
+
+describe('favicon', () => {
+  test('is a clean monogram in the profile navy (not the old cartoon face)', () => {
+    const svg = read('icon.svg');
+    expect(svg).toMatch(/#14213d/i);
+    expect(svg).toMatch(/aria-label="YI"|<title>YI<\/title>/);
+    expect(svg).not.toMatch(/<circle[^>]*r="5"/);            // 昔の顔の目
+  });
+  test('every page links it', () => {
+    const pages = ['index.html', ...apps.map(a => `apps/${a.id}/index.html`)];
+    for (const p of pages) expect(read(p)).toMatch(/<link rel="icon" href="\/icon\.svg" type="image\/svg\+xml">/);
+  });
+  test('the home-screen theme matches the serious part', () => {
+    const m = readJSON('manifest.webmanifest');
+    expect(m.icons[0].src).toBe('/icon.svg');
+    expect(m.theme_color.toLowerCase()).toBe('#14213d');
+  });
+});
+
+describe('loops that must sit on the grid', () => {
+  const { onsets } = require('./helpers/wav');
+  // [音源id, 格子の細かさ（拍）]：音の出だしは全部この格子の上にあること（ずれは5ms以内）
+  test.each([
+    ['x180-ride', 0.25],       // 雨の高架下：16分の格子
+    ['x1280-sparkle', 4],      // 流れ星：4拍ごと（他の音のまとまりと同じ単位）
+  ])('%s: every hit lands on the %f-beat grid', (id, unit) => {
+    const s = sounds.find(x => x.id === id);
+    const grid = 60 / s.bpm * unit;
+    const hits = onsets(path.join(ROOT, s.file));
+    expect(hits.length).toBeGreaterThanOrEqual(4);
+    for (const t of hits) {
+      const off = t % grid;
+      expect(Math.min(off, grid - off)).toBeLessThan(0.005);
+    }
+  });
+});

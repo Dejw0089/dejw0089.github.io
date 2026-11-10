@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Meeting Nods | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .boss { font-size: 64px; line-height: 1; }
+  #line { position: relative; background: #fff6e0; color: #1b1030; border-radius: 16px; padding: 14px 18px; margin: 10px auto 18px;
+          max-width: min(88vw, 420px); font-weight: 800; font-size: 17px; line-height: 1.5; min-height: 3.2em; }
+  #line::before { content: ''; position: absolute; top: -10px; left: 50%; margin-left: -10px; border: 10px solid transparent;
+                  border-top: 0; border-bottom-color: #fff6e0; }
+  .replies { display: grid; gap: 8px; width: min(88vw, 420px); margin: 0 auto; }
+  .reply { font: 800 16px 'M PLUS Rounded 1c', sans-serif; padding: 12px; border-radius: 12px; border: 2px solid #f2cc8f;
+           background: #1e1a2b; color: var(--fg); cursor: pointer; }
+  .reply:active { background: #f2cc8f; color: #12101a; }
+  #say { font-weight: 800; font-size: 16px; min-height: 2.4em; padding: 0 20px; margin-top: 12px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div class="boss">🧔</div>
+  <div id="line"></div>
+  <div class="replies">
+    <button class="reply" data-i18n="r0"></button>
+    <button class="reply" data-i18n="r1"></button>
+    <button class="reply" data-i18n="r2"></button>
+  </div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'aizuchi';
+// a: 正しい相槌（0=褒める 1=持ち帰る 2=同意する）
+const LINES = [
+  { a: 0, en: 'I shot my best golf score last weekend.', ja: '先週のゴルフ、ベストスコアだったんだよ。' },
+  { a: 0, en: 'I made these slides all by myself.', ja: 'この資料、俺が自分で作ったんだよ。' },
+  { a: 0, en: 'I found a really good soba place near the station.', ja: '駅前にうまい蕎麦屋を見つけてさ。' },
+  { a: 1, en: 'So, make it sort of nice by next week.', ja: 'じゃあ来週までに、なんかいい感じにしといて。' },
+  { a: 1, en: 'We can do this with zero budget, right?', ja: 'これ、予算ゼロでできるよね？' },
+  { a: 1, en: 'Can we also add AI to it somehow?', ja: 'これ、なんかAIでいい感じにできない？' },
+  { a: 2, en: 'In the end, it all comes down to guts.', ja: 'やっぱり最後は気合いだと思うんだよね。' },
+  { a: 2, en: 'Back in my day we all worked till the last train.', ja: '昔はみんな終電まで働いてたけどな。' },
+  { a: 2, en: 'Meetings are important, so let us meet about meetings.', ja: '会議は大事だから、会議について会議しよう。' },
+];
+const T = {
+  en: {
+    back: '← Back', title: 'Meeting Nods', intro: 'Reply to the boss with the right empty phrase.',
+    r0: 'Brilliant, as always!', r1: 'I will take that back and consider it.', r2: 'Exactly as you say.',
+    good: ['Nice nod.', 'The boss looks pleased.', 'Nothing was said, perfectly.', 'Career +1.'],
+    bad: 'Wrong nod. An awkward silence fills the room.',
+    rec: (n, s) => 'Good nods ' + n + ' / Best streak ' + s,
+  },
+  ja: {
+    back: '← 戻る', title: '会議の相槌', intro: '上司の話に、正しい中身のない相槌を返してください。',
+    r0: 'さすがです！', r1: '持ち帰って検討します。', r2: 'おっしゃる通りです。',
+    good: ['いい相槌です。', '上司が満足そうです。', '何も言っていないのに完璧です。', '出世 +1。'],
+    bad: '相槌を間違えました。会議室に気まずい沈黙が流れます。',
+    rec: (n, s) => 'うまい相槌 ' + n + ' / 最高連続 ' + s,
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const lineEl = document.getElementById('line'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let cur = -1, streak = 0;
+function paintLine() {
+  const l = LINES[cur];
+  lineEl.textContent = l[FZ.lang()] || l.en;
+  lineEl.dataset.answer = l.a;
+}
+function next() {
+  let i;
+  do { i = Math.floor(Math.random() * LINES.length); } while (i === cur && LINES.length > 1);
+  cur = i;
+  paintLine();
+}
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'nods'), FZ.stat(APP, 'streak')); }
+document.querySelectorAll('.reply').forEach((b, i) => b.addEventListener('click', () => {
+  if (i === LINES[cur].a) {
+    streak++;
+    FZ.add(APP, 'nods', 1);
+    FZ.max(APP, 'streak', streak);
+    say.textContent = L.good[Math.floor(Math.random() * L.good.length)];
+  } else {
+    streak = 0;
+    say.textContent = L.bad;
+  }
+  show();
+  next();
+}));
+next();
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); paintLine(); show(); });
+</script>
+</body>
+</html>

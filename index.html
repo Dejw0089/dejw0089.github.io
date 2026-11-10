@@ -8,7 +8,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#f7f6f2">
-<link rel="stylesheet" href="/core/core.css?v=7">
+<link rel="stylesheet" href="/core/core.css?v=8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <script>
   // 描画前に言語を決めておく（ちらつき防止）
@@ -77,7 +77,25 @@
   .fun h2 { font-family: 'DotGothic16', monospace; font-size: 22px; margin: 36px 0 14px; }
   .fun h2 small { color: var(--muted); font-size: 14px; margin-left: 8px; }
 
-  .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  /* アプリ一覧：6個ずつのページ。ボタン・点・スワイプでめくる */
+  .apps-viewport { overflow: hidden; touch-action: pan-y; }
+  .apps-track { display: flex; transition: transform .35s ease; }
+  .app-page { flex: 0 0 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start; }
+  .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; }
+  .pager button { font: inherit; color: var(--fg); background: none; border: 2px solid #3a3450; border-radius: 999px; cursor: pointer; }
+  .pager-prev, .pager-next { width: 40px; height: 40px; font-size: 22px !important; line-height: 1; }
+  .pager button:disabled { opacity: .3; cursor: default; }
+  .pager-dots { display: flex; gap: 8px; }
+  .pager-dots button { width: 12px; height: 12px; padding: 0; background: #3a3450; border: none; }
+  .pager-dots button[aria-current="true"] { background: #ffe066; }
+  .pager-count { font-family: 'DotGothic16', monospace; color: var(--muted); font-size: 13px; min-width: 3.2em; }
+  @media (max-width: 560px) {
+    .app-page { grid-template-columns: repeat(2, 1fr); gap: 10px; }   /* スマホは2列×3段 */
+    .app { padding: 12px; }
+    .app .emo { font-size: 32px; }
+    .app .t { font-size: 16px; }
+    .app .d { font-size: 12.5px; }
+  }
   .app { display: block; text-decoration: none; background: var(--card); border-radius: 16px; padding: 16px;
          border: 3px solid transparent; transition: transform .15s; }
   .app:hover { transform: rotate(-1.5deg) scale(1.03); border-color: var(--c); }
@@ -142,6 +160,18 @@
   .tempo:not([aria-selected="true"]):hover { color: var(--fg); }
   .tempo:disabled { cursor: wait; }
   .tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+  .presets .lbl { font-size: 13px; color: var(--muted); }
+  .preset { font: inherit; font-size: 13px; text-align: left; line-height: 1.25; border-radius: 10px; padding: 7px 11px; cursor: pointer;
+            border: 2px solid #3a3450; background: #15121f; color: var(--fg); }
+  .preset .preset-sub { display: block; font-size: 11px; color: var(--muted); }
+  .preset[aria-pressed="true"] { border-color: var(--gc); background: #2b2410; }
+  .preset:disabled { cursor: not-allowed; opacity: .5; }
+  .selbar { display: flex; gap: 10px; align-items: baseline; margin-top: 10px; min-height: 1.4em; }
+  #oncount { font-family: 'DotGothic16', monospace; color: var(--gc); }
+  #oncount.full { animation: nope .3s; }
+  @keyframes nope { 25% { translate: -4px 0; } 75% { translate: 4px 0; } }
+  #groovemsg { font-size: 13px; color: #ff8fa3; }
   .trk { border-radius: 12px; padding: 12px; border: 3px solid #3a3450; background: #15121f; text-align: left;
          color: var(--fg); font: inherit; cursor: pointer; min-height: 74px; }
   .trk .n { font-weight: 800; }
@@ -223,7 +253,15 @@
         <p class="tag" data-i18n-html="tagline"></p>
 
         <h2><span data-i18n="apps"></span> <small data-i18n="appsSub"></small></h2>
-        <div class="apps" id="apps"></div>
+        <div class="apps-pager" id="apps">
+          <div class="apps-viewport"><div class="apps-track" id="appstrack"></div></div>
+          <div class="pager">
+            <button class="pager-prev" aria-label="previous">‹</button>
+            <div class="pager-dots"></div>
+            <span class="pager-count"></span>
+            <button class="pager-next" aria-label="next">›</button>
+          </div>
+        </div>
 
         <h2><span data-i18n="groove"></span> <small id="count" class="count"></small></h2>
         <div class="groove" id="groove">
@@ -236,6 +274,8 @@
           </div>
           <div class="lamps" id="lamps" aria-hidden="true"></div>
           <div class="kakutei" id="kakutei" aria-hidden="true"></div>
+          <div class="presets" id="presets"></div>
+          <div class="selbar"><span id="oncount"></span><span id="groovemsg" aria-live="polite"></span></div>
           <div class="tracks" id="tracks"></div>
         </div>
 
@@ -258,7 +298,7 @@
   </section>
 </main>
 
-<script src="/core/core.js?v=7"></script>
+<script src="/core/core.js?v=8"></script>
 <script>
 const T = {
   en: {
@@ -281,6 +321,8 @@ const T = {
     fxOn: '✨ Lights: on', fxOff: '✨ Lights: off', fxTitle: 'Gentle lights synced to the beat (at most 2 pulses per second)', kakutei: '★ FEVER ★',
     cheat: '🔓 Unlock everything', cheated: 'Everything unlocked. Cheater.', allDone: 'Already all unlocked.',
     locked: '???', lockedHint: 'Dropped somewhere in the games',
+    presetsLabel: 'Picks:', presetLocked: n => '🔒 ' + n + ' to go', presetCount: n => n + ' sounds',
+    maxMsg: n => 'Up to ' + n + ' sounds at once', pageOf: (a, b) => a + ' / ' + b,
     save: 'Save', saveSub: 'for moving devices or lost data',
     saveSummary: 'Show / load a save code',
     saveNote: 'Progress is stored in this browser. Safari on iPhone may delete it if you do not visit for a while, so add this page to your Home Screen or keep a save code somewhere.',
@@ -309,6 +351,8 @@ const T = {
     fxOn: '✨ 演出：ON', fxOff: '✨ 演出：OFF', fxTitle: 'ビートに合わせて控えめに光ります（明滅は毎秒2回まで）', kakutei: '★ FEVER ★',
     cheat: '🔓 全部解放する', cheated: '全部解放しました。ズルです。', allDone: 'もう全部解放済みです。',
     locked: '？？？', lockedHint: 'どこかのゲームに落ちている',
+    presetsLabel: 'おすすめ：', presetLocked: n => '🔒 あと' + n, presetCount: n => n + '音',
+    maxMsg: n => '同時に鳴らせるのは' + n + 'つまでです', pageOf: (a, b) => a + ' / ' + b,
     save: 'セーブ', saveSub: '引っ越し・消えたとき用',
     saveSummary: 'セーブコードを出す / 読み込む',
     saveNote: '進捗はこのブラウザに保存されます。iPhoneのSafariはしばらく開かないと消えることがあるので、ホーム画面に追加するか、たまにコードを控えておくと安心です。',
@@ -328,6 +372,9 @@ FZ.langToggle();
     fetch('/data/apps.json?v=' + FZ.V).then(r => r.json()),
     FZ.rules(),
   ]);
+  const catalog = await FZ.catalog();
+  const PRESETS = catalog.presets || [];
+  const MAX_ON = catalog.maxOn || 5;   // 同時に鳴らせる音源の数
 
   // ---------- 状態 ----------
   // テンポごとに音源セットが分かれている（unlocks.json の bpm）。鳴らせるのは常に1セットだけ
@@ -341,7 +388,15 @@ FZ.langToggle();
   let tempo = FZ.stat('top', 'bpm') || 120;
   if (!TEMPOS.some(x => x.bpm === tempo)) tempo = 120;
   let unlocked = new Set(FZ.unlocked());
-  let on = new Set(unlocked);            // 解放済みは最初から全部ON
+  // 選んでいる音源はテンポごと。最初は「全部そろっている最初のおすすめ」、なければ持っている音源を上から上限まで
+  let sel = {};
+  function defaultSel(bpm) {
+    const full = PRESETS.find(p => p.bpm === bpm && p.sounds.every(id => unlocked.has(id)));
+    if (full) return new Set(full.sounds);
+    return new Set(rules.filter(r => bpmOf(r) === bpm && unlocked.has(r.id)).slice(0, MAX_ON).map(r => r.id));
+  }
+  const on = () => (sel[tempo] = sel[tempo] || defaultSel(tempo));
+  let appPage = 0;
   let ctx = null, master = null, buffers = {}, gains = {}, sources = [];
   let playing = false;
   let gen = 0;                           // 再生の世代。読み込み中にテンポを変えたら古いほうは鳴らさない
@@ -386,21 +441,65 @@ FZ.langToggle();
       careerEl.appendChild(li);
     }
   }
+  const PER_PAGE = 6;
+  const pageCount = () => Math.ceil(apps.length / PER_PAGE);
   function renderApps() {
-    const el = $('apps');
-    el.textContent = '';
-    for (const a of apps) {
-      const card = document.createElement('a');
-      card.className = 'app';
-      card.href = '/apps/' + a.id + '/';
-      card.style.setProperty('--c', a.color);
-      card.innerHTML = '<div class="emo"></div><div class="t"></div><div class="d"></div>';
-      card.querySelector('.emo').textContent = a.emoji;
-      card.querySelector('.t').textContent = t(a.title);
-      card.querySelector('.d').textContent = t(a.desc);
-      el.appendChild(card);
+    const track = $('appstrack');
+    track.textContent = '';
+    for (let pg = 0; pg < pageCount(); pg++) {
+      const page = document.createElement('div');
+      page.className = 'app-page';
+      for (const a of apps.slice(pg * PER_PAGE, (pg + 1) * PER_PAGE)) {
+        const card = document.createElement('a');
+        card.className = 'app';
+        card.href = '/apps/' + a.id + '/';
+        card.style.setProperty('--c', a.color);
+        card.innerHTML = '<div class="emo"></div><div class="t"></div><div class="d"></div>';
+        card.querySelector('.emo').textContent = a.emoji;
+        card.querySelector('.t').textContent = t(a.title);
+        card.querySelector('.d').textContent = t(a.desc);
+        page.appendChild(card);
+      }
+      track.appendChild(page);
     }
+    const dots = document.querySelector('.pager-dots');
+    dots.textContent = '';
+    for (let pg = 0; pg < pageCount(); pg++) {
+      const d = document.createElement('button');
+      d.setAttribute('aria-label', String(pg + 1));
+      d.onclick = () => goPage(pg);
+      dots.appendChild(d);
+    }
+    goPage(appPage);
   }
+  function goPage(n) {
+    appPage = Math.max(0, Math.min(pageCount() - 1, n));
+    $('appstrack').style.transform = 'translateX(' + (-100 * appPage) + '%)';
+    document.querySelectorAll('.app-page').forEach((pg, i) => {
+      const hidden = i !== appPage;
+      pg.toggleAttribute('inert', hidden);          // 見えないページはタップもタブ移動もしない
+      pg.setAttribute('aria-hidden', String(hidden));
+    });
+    document.querySelectorAll('.pager-dots button').forEach((d, i) => d.setAttribute('aria-current', String(i === appPage)));
+    document.querySelector('.pager-count').textContent = L.pageOf(appPage + 1, pageCount());
+    document.querySelector('.pager-prev').disabled = appPage === 0;
+    document.querySelector('.pager-next').disabled = appPage === pageCount() - 1;
+  }
+  document.querySelector('.pager-prev').onclick = () => goPage(appPage - 1);
+  document.querySelector('.pager-next').onclick = () => goPage(appPage + 1);
+  // スワイプ：横に40px以上動かしたらめくる。めくったときはリンクを開かない
+  (function () {
+    const vp = document.querySelector('.apps-viewport');
+    let sx = null, sy = 0, swiped = false;
+    vp.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; swiped = false; });
+    window.addEventListener('pointerup', e => {
+      if (sx === null) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      sx = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { swiped = true; goPage(appPage + (dx < 0 ? 1 : -1)); }
+    });
+    vp.addEventListener('click', e => { if (swiped) { e.preventDefault(); swiped = false; } }, true);
+  })();
   function renderTempos() {
     const el = $('tempos');
     el.textContent = '';
@@ -421,23 +520,67 @@ FZ.langToggle();
       el.appendChild(b);
     }
   }
+  function setGain(id) {
+    if (gains[id]) gains[id].gain.setTargetAtTime(on().has(id) ? 1 : 0, ctx.currentTime, 0.02);
+  }
+  function renderPresets() {
+    const el = $('presets');
+    el.textContent = '';
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl';
+    lbl.textContent = L.presetsLabel;
+    el.appendChild(lbl);
+    const cur = on();
+    for (const p of PRESETS.filter(x => x.bpm === tempo)) {
+      const missing = p.sounds.filter(id => !unlocked.has(id)).length;
+      const b = document.createElement('button');
+      b.className = 'preset';
+      b.innerHTML = '<span class="preset-name"></span><span class="preset-sub"></span>';
+      b.querySelector('.preset-name').textContent = t(p.name);
+      b.querySelector('.preset-sub').textContent = missing ? L.presetLocked(missing) : L.presetCount(p.sounds.length);
+      b.disabled = missing > 0;
+      b.setAttribute('aria-pressed', String(cur.size === p.sounds.length && p.sounds.every(id => cur.has(id))));
+      b.onclick = () => {
+        if (missing) return;
+        const before = on();
+        sel[tempo] = new Set(p.sounds);
+        for (const id of new Set([...before, ...p.sounds])) setGain(id);
+        $('groovemsg').textContent = '';
+        renderTracks();
+      };
+      el.appendChild(b);
+    }
+  }
+  function paintOnCount() { $('oncount').textContent = 'ON ' + on().size + '/' + MAX_ON; }
   function renderTracks() {
     $('count').textContent = unlocked.size + ' / ' + rules.length + ' ' + L.sounds;
     renderTempos();
+    renderPresets();
+    paintOnCount();
     const el = $('tracks');
     el.textContent = '';
     for (const r of rules) {
       if (bpmOf(r) !== tempo) continue;
       const b = document.createElement('button');
       const has = unlocked.has(r.id);
-      b.className = 'trk' + (has ? (on.has(r.id) ? ' on' : '') : ' locked');
+      b.className = 'trk' + (has ? (on().has(r.id) ? ' on' : '') : ' locked');
+      b.dataset.id = r.id;
       b.innerHTML = '<div class="n"></div><div class="h"></div>';
       b.querySelector('.n').textContent = has ? t(r.name) : L.locked;
       b.querySelector('.h').textContent = has ? '' : L.lockedHint;
       if (has) b.onclick = () => {
-        on.has(r.id) ? on.delete(r.id) : on.add(r.id);
-        b.classList.toggle('on', on.has(r.id));
-        if (gains[r.id]) gains[r.id].gain.setTargetAtTime(on.has(r.id) ? 1 : 0, ctx.currentTime, 0.02);
+        const cur = on();
+        if (!cur.has(r.id) && cur.size >= MAX_ON) {          // 上限：これ以上は足せない
+          $('groovemsg').textContent = L.maxMsg(MAX_ON);
+          const c = $('oncount'); c.classList.remove('full'); void c.offsetWidth; c.classList.add('full');
+          return;
+        }
+        cur.has(r.id) ? cur.delete(r.id) : cur.add(r.id);
+        b.classList.toggle('on', cur.has(r.id));
+        $('groovemsg').textContent = '';
+        setGain(r.id);
+        paintOnCount();
+        renderPresets();
       };
       el.appendChild(b);
     }
@@ -465,8 +608,10 @@ FZ.langToggle();
   document.body.classList.remove('booting');   // ここで初めて見せる
 
   // アプリから戻ってきた＆箱が開いている → 「無駄コーナー」の見出しから見せる
-  let fromApp = false;
-  try { fromApp = sessionStorage.getItem('fz-from-app') === '1'; sessionStorage.removeItem('fz-from-app'); } catch (e) {}
+  let fromApp = null;
+  try { fromApp = sessionStorage.getItem('fz-from-app'); sessionStorage.removeItem('fz-from-app'); } catch (e) {}
+  const fromIdx = apps.findIndex(a => a.id === fromApp);
+  if (fromIdx >= 0) goPage(Math.floor(fromIdx / PER_PAGE));
   if (fromApp && boxState === 1) {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     const target = document.querySelector('h1.boxname');
@@ -534,7 +679,7 @@ FZ.langToggle();
       src.buffer = buffers[r.id];
       src.loop = true;
       const g = ctx.createGain();
-      g.gain.value = on.has(r.id) ? 1 : 0;
+      g.gain.value = on().has(r.id) ? 1 : 0;
       src.connect(g).connect(master);
       src.start(t0);
       gains[r.id] = g;
@@ -629,7 +774,7 @@ FZ.langToggle();
     stop();
     await FZ.unlockAll();
     unlocked = new Set(FZ.unlocked());
-    on = new Set(unlocked);
+    sel = {};                               // 選び直し：各テンポのおすすめから
     renderTracks();
     $('cheat').textContent = L.cheated;
     if (was) start();

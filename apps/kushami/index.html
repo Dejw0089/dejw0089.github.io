@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Almost Sneeze | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  #face { font-size: 90px; line-height: 1; transition: transform .1s; }
+  .meter { width: min(80vw, 320px); height: 18px; margin: 16px auto 0; border-radius: 999px; background: #2b2540; overflow: hidden; }
+  #bar { height: 100%; width: 0; background: linear-gradient(90deg, #f4978e, #ffd166); }
+  #sneeze { margin-top: 16px; font: 800 20px 'M PLUS Rounded 1c', sans-serif; padding: 12px 30px; border-radius: 999px; border: none;
+            background: #f4978e; color: #12101a; cursor: pointer; }
+  .boom { animation: boom .35s; }
+  @keyframes boom { 30% { transform: scale(1.3) rotate(-8deg); } }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 14px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div id="face">😐</div>
+  <div class="meter"><div id="bar"></div></div>
+  <button id="sneeze" data-i18n="sneeze"></button>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'kushami';
+const PERIOD = 700;   // むずむずの波の速さ（ms）
+const T = {
+  en: {
+    back: '← Back', title: 'Almost Sneeze', sneeze: 'Sneeze',
+    intro: 'The tickle comes and goes. Sneeze at the very peak.',
+    weak: 'It did not come out. The worst feeling.',
+    out: p => p >= 95 ? 'AAACHOO!! (' + p + ') The windows rattled.' : p >= 70 ? 'Achoo! (' + p + ') A respectable sneeze.' : 'Chu. (' + p + ') A polite little sneeze.',
+    rec: (n, b) => 'Sneezes ' + n + ' / Best ' + b,
+  },
+  ja: {
+    back: '← 戻る', title: 'くしゃみ', sneeze: 'くしゃみ',
+    intro: 'むずむずが来たり引いたりします。いちばんむずむずした瞬間にくしゃみしてください。',
+    weak: '出ませんでした。いちばん気持ち悪いやつです。',
+    out: p => p >= 95 ? 'ハックション!!（' + p + '）窓が揺れました。' : p >= 70 ? 'ハクション！（' + p + '）立派なくしゃみです。' : 'クシュン。（' + p + '）上品なくしゃみです。',
+    rec: (n, b) => 'くしゃみ ' + n + '回 / 最高 ' + b,
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const face = document.getElementById('face'), bar = document.getElementById('bar'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let t0 = performance.now();
+function level() { return Math.round(100 * Math.abs(Math.sin((performance.now() - t0) / PERIOD))); }
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'sneezes'), FZ.stat(APP, 'best')); }
+function frame() {
+  const p = level();
+  bar.style.width = p + '%';
+  face.textContent = p >= 85 ? '😫' : p >= 50 ? '😣' : '😐';
+  requestAnimationFrame(frame);
+}
+document.getElementById('sneeze').onclick = () => {
+  const p = level();
+  if (p < 30) { say.textContent = L.weak; return; }
+  FZ.add(APP, 'sneezes', 1);
+  FZ.max(APP, 'best', p);
+  say.textContent = L.out(p);
+  face.classList.remove('boom'); void face.offsetWidth; face.classList.add('boom');
+  t0 = performance.now();          // むずむずは最初から
+  show();
+};
+frame();
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

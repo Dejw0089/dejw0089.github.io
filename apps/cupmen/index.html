@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Cup Noodle Clock | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .cup { font-size: 96px; line-height: 1; }
+  .cup.steam::after { content: '♨'; position: absolute; margin: -20px 0 0 -40px; font-size: 40px; opacity: .6; animation: steam 2s infinite; }
+  @keyframes steam { 50% { translate: 0 -10px; opacity: .3; } }
+  #score { font: 40px 'DotGothic16', monospace; color: #e76f51; min-height: 1.2em; }
+  .btns { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+  .btns button { font: 800 20px 'M PLUS Rounded 1c', sans-serif; padding: 12px 28px; border-radius: 999px; border: none; cursor: pointer;
+                 background: #e76f51; color: #12101a; }
+  .btns button:disabled { opacity: .35; cursor: default; }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 14px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div class="cup" id="cup">🍜</div>
+  <div id="score"></div>
+  <div class="btns"><button id="pour" data-i18n="pour"></button><button id="eat" data-i18n="eat" disabled></button></div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'cupmen';
+const TARGET = 30;   // 3分は長いので30秒麺
+const T = {
+  en: {
+    back: '← Back', title: 'Cup Noodle Clock', pour: 'Pour water', eat: 'Eat',
+    intro: 'Pour the water, then eat at exactly 30 seconds. There is no timer. Trust your body.',
+    waiting: 'Waiting… (no peeking, there is nothing to peek at)',
+    result: (s, sc) => s.toFixed(1) + 's. ' + (sc >= 95 ? 'Perfect texture.' : s < TARGET ? 'Crunchy. You were hungry.' : 'Soggy. The noodles gave up.') + ' (' + sc + ' pts)',
+    rec: (b, s) => 'Bowls ' + b + ' / Best ' + s + ' pts',
+  },
+  ja: {
+    back: '← 戻る', title: '体内時計カップ麺', pour: 'お湯を入れる', eat: '食べる',
+    intro: 'お湯を入れて、ちょうど30秒で食べてください。タイマーはありません。体内時計を信じて。',
+    waiting: '待っています…（見ても何もありません）',
+    result: (s, sc) => s.toFixed(1) + '秒。' + (sc >= 95 ? 'ちょうどいい。' : s < TARGET ? 'かたい。お腹が空いていたようです。' : 'のびのび。麺があきらめました。') + '（' + sc + '点）',
+    rec: (b, s) => '食べた数 ' + b + ' / 最高 ' + s + '点',
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const pour = document.getElementById('pour'), eat = document.getElementById('eat'), cup = document.getElementById('cup');
+const scoreEl = document.getElementById('score'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let t0 = 0;
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'bowls'), FZ.stat(APP, 'best')); }
+pour.onclick = () => {
+  t0 = performance.now();
+  pour.disabled = true; eat.disabled = false;
+  cup.classList.add('steam');
+  scoreEl.textContent = '';
+  say.textContent = L.waiting;
+};
+eat.onclick = () => {
+  if (eat.disabled) return;
+  const s = (performance.now() - t0) / 1000;
+  const sc = Math.max(0, Math.round(100 - Math.abs(s - TARGET) * 20));
+  FZ.add(APP, 'bowls', 1);
+  FZ.max(APP, 'best', sc);
+  scoreEl.textContent = sc;
+  say.textContent = L.result(s, sc);
+  pour.disabled = false; eat.disabled = true;
+  cup.classList.remove('steam');
+  show();
+};
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

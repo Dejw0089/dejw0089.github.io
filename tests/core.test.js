@@ -246,7 +246,7 @@ describe('drop strip on game pages', () => {
 describe('coming back from a game', () => {
   test('game pages leave a note so the top page can jump back to the corner', async () => {
     page = await openPage(APP);
-    expect(page.window.sessionStorage.getItem('fz-from-app')).toBe('1');
+    expect(page.window.sessionStorage.getItem('fz-from-app')).toBe('muda-button');   // どのゲームから戻ったか
     page.close();
     page = await openPage('/');
     expect(page.window.sessionStorage.getItem('fz-from-app')).toBeNull();

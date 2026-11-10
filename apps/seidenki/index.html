@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Static Shock | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  #volt { font: 44px 'DotGothic16', monospace; color: #ffd166; }
+  #volt small { font-size: 16px; color: var(--muted); }
+  .row { display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 12px; }
+  #carpet { width: min(56vw, 240px); height: 150px; border-radius: 14px; touch-action: none; cursor: ew-resize;
+            background: repeating-linear-gradient(45deg, #7b2d26 0 6px, #8f3a31 6px 12px); display: grid; place-items: center;
+            color: #ffd8cc; font: 800 14px 'M PLUS Rounded 1c', sans-serif; }
+  #knob { width: 86px; height: 86px; border-radius: 50%; border: none; cursor: pointer;
+          background: radial-gradient(circle at 35% 30%, #fff3c4, #d4a017 55%, #8a6a10); box-shadow: 0 6px 12px #0008;
+          font: 800 13px 'M PLUS Rounded 1c', sans-serif; color: #3a2a00; }
+  .zap { animation: zap .4s; }
+  @keyframes zap { 20% { translate: -8px 2px; } 40% { translate: 7px -3px; } 60% { translate: -5px 3px; } 80% { translate: 3px -1px; } }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 14px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div id="all">
+  <div id="volt" data-v="0">0<small>V</small></div>
+  <div class="row">
+    <div id="carpet" data-i18n="carpet"></div>
+    <button id="knob" data-i18n="knob"></button>
+  </div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'seidenki';
+const PER_PX = 3, CAP = 12000;
+const T = {
+  en: {
+    back: '← Back', title: 'Static Shock', carpet: '← rub →', knob: 'knob',
+    intro: 'Drag back and forth on the carpet to build up static, then touch the doorknob.',
+    tiny: 'Nothing happened. Rub more.',
+    zap: v => v >= 10000 ? 'BZZZT!! ' + v + 'V. You saw your own skeleton.' : v >= 5000 ? 'Bzzt! ' + v + 'V. That hurt.' : 'Bzt. ' + v + 'V. A small sting.',
+    rec: (z, b) => 'Zaps ' + z + ' / Best ' + b + 'V',
+  },
+  ja: {
+    back: '← 戻る', title: '静電気', carpet: '← こする →', knob: 'ドアノブ',
+    intro: 'じゅうたんの上を左右になぞって静電気をためてから、ドアノブに触ってください。',
+    tiny: '何も起きません。もっとこすってください。',
+    zap: v => v >= 10000 ? 'バチィッ!! ' + v + 'V。一瞬、自分の骨が見えました。' : v >= 5000 ? 'バチッ！ ' + v + 'V。痛い。' : 'ピリッ。' + v + 'V。ちょっと痛い。',
+    rec: (z, b) => 'ビリッとした回数 ' + z + ' / 最高 ' + b + 'V',
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const voltEl = document.getElementById('volt'), carpet = document.getElementById('carpet'), knob = document.getElementById('knob');
+const say = document.getElementById('say'), rec = document.getElementById('rec'), all = document.getElementById('all');
+let charge = 0, rubbing = false, lastX = 0;
+function paint() { voltEl.dataset.v = Math.round(charge); voltEl.innerHTML = Math.round(charge) + '<small>V</small>'; }
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'zaps'), FZ.stat(APP, 'bestVolt')); }
+carpet.addEventListener('pointerdown', e => { e.preventDefault(); rubbing = true; lastX = e.clientX; });
+window.addEventListener('pointermove', e => {
+  if (!rubbing) return;
+  charge = Math.min(CAP, charge + Math.abs(e.clientX - lastX) * PER_PX);
+  lastX = e.clientX;
+  paint();
+});
+['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => { rubbing = false; }));
+knob.addEventListener('click', () => {
+  if (charge < 100) { say.textContent = L.tiny; return; }
+  const v = Math.round(charge);
+  FZ.add(APP, 'zaps', 1);
+  FZ.max(APP, 'bestVolt', v);
+  say.textContent = L.zap(v);
+  charge = 0;
+  paint();
+  all.classList.remove('zap'); void all.offsetWidth; all.classList.add('zap');   // 光らせず、揺らすだけ
+  show();
+});
+paint();
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

@@ -49,7 +49,7 @@ function wavDuration(buf) {
 function makeAudio(clock) {
   const contexts = [];
   const param = v => ({ value: v, setValueAtTime() {}, setTargetAtTime(x) { this.value = x; }, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} });
-  const node = extra => Object.assign({ connect(n) { return n || this; }, disconnect() {} }, extra);
+  const node = extra => Object.assign({ connect(n) { this.dest = n; return n || this; }, disconnect() {} }, extra);
   class FakeAudioContext {
     constructor() {
       this.active = new Set();

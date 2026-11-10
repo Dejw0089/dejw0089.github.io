@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Snooze | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .bed { font-size: 84px; line-height: 1; }
+  #mins { font: 40px 'DotGothic16', monospace; color: #c77dff; }
+  #mins small { font-size: 16px; color: var(--muted); }
+  .btns { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+  .btns button { font: 800 19px 'M PLUS Rounded 1c', sans-serif; padding: 12px 24px; border-radius: 999px; border: none; cursor: pointer; }
+  #snooze { background: #9d4edd; color: #fff; }
+  #wake { background: #fff6e0; color: #12101a; }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 14px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div class="bed" id="bed">🛌</div>
+  <div id="mins">0<small> min</small></div>
+  <div class="btns"><button id="snooze" data-i18n="snooze"></button><button id="wake" data-i18n="wake"></button></div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'nidone';
+const T = {
+  en: {
+    back: '← Back', title: 'Snooze', snooze: 'Snooze (+5 min)', wake: 'Get up',
+    intro: 'Every snooze is 5 more minutes. Get up before the boss calls, or the minutes are gone.',
+    more: ['Five more minutes…', 'Just five more…', 'This is the last one (it is not).', 'Zzz…'],
+    caught: '📞 "Where are you right now?" The boss called. All that sleep is now guilt.',
+    up: m => 'You got up with ' + m + ' bonus minutes of sleep. Victory.',
+    rec: (m, b, c) => 'Minutes slept ' + m + ' / Best ' + b + ' / Caught ' + c,
+  },
+  ja: {
+    back: '← 戻る', title: '二度寝', snooze: 'スヌーズ（+5分）', wake: '起きる',
+    intro: 'スヌーズのたびにあと5分。上司から電話が来る前に起きないと、寝た分は消えます。',
+    more: ['あと5分…', 'あと5分だけ…', 'これで最後（最後ではない）。', 'Zzz…'],
+    caught: '📞「今どこ？」上司から電話です。寝た分はすべて罪悪感になりました。',
+    up: m => '二度寝ボーナス' + m + '分を獲得して起きました。勝利です。',
+    rec: (m, b, c) => '寝た分 ' + m + ' / 最高 ' + b + ' / 電話 ' + c + '回',
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const minsEl = document.getElementById('mins'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let mins = 0, snoozes = 0;
+function paint() { minsEl.innerHTML = mins + '<small> min</small>'; }
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'minutes'), FZ.stat(APP, 'best'), FZ.stat(APP, 'caught')); }
+document.getElementById('snooze').onclick = () => {
+  const risk = 0.05 + 0.07 * snoozes;          // スヌーズするほど電話が来やすい
+  if (Math.random() < risk) {
+    FZ.add(APP, 'caught', 1);
+    say.textContent = L.caught;
+    mins = 0; snoozes = 0;
+  } else {
+    mins += 5; snoozes++;
+    say.textContent = L.more[Math.min(snoozes - 1, L.more.length - 1)];
+  }
+  paint(); show();
+};
+document.getElementById('wake').onclick = () => {
+  if (!mins) return;
+  FZ.add(APP, 'minutes', mins);
+  FZ.max(APP, 'best', mins);
+  say.textContent = L.up(mins);
+  mins = 0; snoozes = 0;
+  paint(); show();
+};
+paint();
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

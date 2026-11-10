@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>USB First Try | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .scene { display: flex; align-items: center; justify-content: center; gap: 6px; height: 120px; }
+  #plug { width: 120px; height: 46px; background: #b8c0cc; border-radius: 6px; position: relative; transition: transform .25s, translate .25s; }
+  #plug::before { content: ''; position: absolute; right: -34px; top: 9px; width: 34px; height: 28px; background: #d9dee6; border-radius: 2px; }
+  #plug::after { content: ''; position: absolute; right: -28px; top: 13px; width: 22px; height: 8px; background: #6c7380; }
+  #plug.flip { transform: scaleY(-1); }
+  #plug.in { translate: 22px 0; }
+  .port { width: 40px; height: 34px; background: #2b2f38; border: 4px solid #8d99ae; border-radius: 4px; margin-left: 30px; }
+  #insert { margin-top: 18px; font: 800 22px 'M PLUS Rounded 1c', sans-serif; padding: 12px 34px; background: #8d99ae; color: #12101a;
+            border: none; border-radius: 999px; cursor: pointer; }
+  #say { font-weight: 800; font-size: 18px; min-height: 2.6em; padding: 0 20px; margin-top: 16px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+  .shake { animation: shake .3s; }
+  @keyframes shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div class="scene"><div id="plug"></div><div class="port"></div></div>
+  <button id="insert" data-i18n="insert"></button>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'usb';
+const T = {
+  en: {
+    back: '← Back', title: 'USB First Try', insert: 'Plug it in', intro: 'Plug the USB in on the first try. Probably impossible.',
+    fail: ['Wrong way. Flipped it.', 'Wrong way again. There should only be two sides.', 'Still wrong. This USB has a third side.', 'It is now a matter of faith.'],
+    first: 'First try! You are a legend.',
+    later: n => 'In on try ' + n + '. As usual.',
+    rec: (p, f) => 'Plugged ' + p + ' / First try ' + f,
+  },
+  ja: {
+    back: '← 戻る', title: 'USB一発', insert: '挿す', intro: 'USBを一発で挿してください。たぶん無理です。',
+    fail: ['逆でした。ひっくり返します。', 'また逆でした。表と裏しかないはずですが。', 'まだ逆です。このUSBには第3の面があります。', 'もう信仰の問題です。'],
+    first: '一発で挿さりました！ 伝説です。',
+    later: n => n + '回目で挿さりました。いつも通りです。',
+    rec: (p, f) => '挿した回数 ' + p + ' / 一発 ' + f,
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const plug = document.getElementById('plug'), say = document.getElementById('say'), rec = document.getElementById('rec'), btn = document.getElementById('insert');
+let tries = 0, busy = false;
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'plugs'), FZ.stat(APP, 'firstTry')); }
+btn.onclick = () => {
+  if (busy) return;
+  tries++;
+  if (Math.random() < 0.5) {
+    say.textContent = L.fail[Math.min(tries, L.fail.length) - 1];
+    plug.classList.toggle('flip');
+    plug.classList.remove('shake'); void plug.offsetWidth; plug.classList.add('shake');
+    return;
+  }
+  plug.classList.add('in');
+  FZ.add(APP, 'plugs', 1);
+  if (tries === 1) FZ.add(APP, 'firstTry', 1);
+  say.textContent = tries === 1 ? L.first : L.later(tries);
+  tries = 0;
+  busy = true;
+  show();
+  setTimeout(() => { busy = false; plug.classList.remove('in'); plug.classList.toggle('flip', Math.random() < 0.5); }, 600);
+};
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

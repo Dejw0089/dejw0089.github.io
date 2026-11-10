@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Ticket Gate | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .gate { width: min(70vw, 260px); margin: 0 auto; background: #2d3142; border-radius: 14px; padding: 18px; position: relative; }
+  .reader { width: 110px; height: 70px; margin: 0 auto; border-radius: 10px; background: #4d908e; display: grid; place-items: center;
+            color: #e0fbfc; font: 14px 'DotGothic16', monospace; transition: background .2s; }
+  .gate.ok .reader { background: #43aa8b; } .gate.ng .reader { background: #c44536; }
+  #card { margin-top: 18px; width: 150px; height: 92px; border-radius: 10px; border: none; cursor: pointer; touch-action: none;
+          background: linear-gradient(135deg, #e0fbfc, #98c1d9); color: #1b1030; font: 800 18px 'M PLUS Rounded 1c', sans-serif;
+          box-shadow: 0 6px 0 #3d5a80; -webkit-touch-callout: none; }
+  #card:active { transform: translateY(-40px) rotate(-6deg); box-shadow: none; }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 16px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div class="gate" id="gate"><div class="reader">IC</div></div>
+  <button id="card" data-i18n="card"></button>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'kaisatsu';
+const MIN = 300, MAX = 900;   // ちょうどいいタッチ（ms）
+const T = {
+  en: {
+    back: '← Back', title: 'Ticket Gate', card: 'Hold to touch',
+    intro: 'Hold your card on the reader. Not too short, not too long.',
+    ok: ['Beep. Through you go.', 'Beep. Smooth commuter.', 'Beep. Nobody behind you sighed.'],
+    short: 'Ping-pong! (Touch too short.) The gate slams.', long: 'Ping-pong! (Too long.) The person behind you clicks their tongue.',
+    rec: (p, s) => 'Passes ' + p + ' / Best streak ' + s,
+  },
+  ja: {
+    back: '← 戻る', title: '改札タッチ', card: '長押しでタッチ',
+    intro: 'カードを読み取り部に当ててください。短すぎず、長すぎず。',
+    ok: ['ピッ。通れました。', 'ピッ。慣れた通勤者です。', 'ピッ。後ろの人もため息をつきませんでした。'],
+    short: 'ピンポーン（タッチが短すぎます）。扉が閉まりました。', long: 'ピンポーン（長すぎます）。後ろの人が舌打ちしています。',
+    rec: (p, s) => '通過 ' + p + ' / 最高連続 ' + s,
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const card = document.getElementById('card'), gate = document.getElementById('gate'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let t0 = 0, touching = false, streak = 0, ctx = null;
+function beep(ok) {
+  try {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    (ok ? [2000] : [1100, 880]).forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), at = ctx.currentTime + i * 0.18;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.15, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.15);
+      o.connect(g).connect(ctx.destination); o.start(at); o.stop(at + 0.16);
+    });
+  } catch (e) {}
+}
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'passes'), FZ.stat(APP, 'streak')); }
+card.addEventListener('pointerdown', e => { e.preventDefault(); touching = true; t0 = performance.now(); gate.className = 'gate'; });
+function release() {
+  if (!touching) return;
+  touching = false;
+  const d = performance.now() - t0;
+  if (d >= MIN && d <= MAX) {
+    streak++;
+    FZ.add(APP, 'passes', 1);
+    FZ.max(APP, 'streak', streak);
+    gate.className = 'gate ok';
+    say.textContent = L.ok[Math.floor(Math.random() * L.ok.length)];
+    beep(true);
+  } else {
+    streak = 0;
+    gate.className = 'gate ng';
+    say.textContent = d < MIN ? L.short : L.long;
+    beep(false);
+  }
+  show();
+}
+['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, release));
+card.addEventListener('contextmenu', e => e.preventDefault());
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

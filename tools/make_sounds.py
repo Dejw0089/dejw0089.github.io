@@ -524,3 +524,332 @@ save("kick.wav", xt_kick(), 0.6)
 save("chip.wav", xt_chip(), 0.35)
 save("arp.wav", xt_arp(), 0.22)
 save("noise.wav", xt_noise(), 0.3)
+
+
+# =====================================================================
+# 追加セット（各テンポ6つずつ）。ここより上の音は1バイトも変えないこと
+# =====================================================================
+
+def triangle(ph):
+    return 2 * np.abs(saw(ph)) - 1
+
+
+def fm_bell(f, n, decay=0.6):
+    x = t(n)
+    mod = np.sin(osc(f * 3.5, n)) * 2.2 * np.exp(-x / (decay * 0.5))
+    return np.sin(osc(f, n) + mod) * np.exp(-x / decay)
+
+
+def clap_one(n):
+    sig = np.zeros(n)
+    for k, d in enumerate([0, 0.011, 0.022]):  # 手拍子は3回ずれて重なる
+        i = int(SR * d)
+        m = n - i
+        sig[i:] += highpass(rng.standard_normal(m), 900) * env(m, 0.0005, 0.012 if k < 2 else 0.09)
+    return sig
+
+
+# ---------------- 120 BPM（Cマイナー）→ sounds/120/ ----------------
+setup(120, 8, "120")
+rng = np.random.default_rng(1201)
+
+
+def x120_clap():
+    buf = np.zeros(LEN)
+    c = clap_one(int(SR * 0.3))
+    for b in (1, 3, 5, 7):
+        place(buf, c, b)
+    return buf
+
+
+def x120_shaker():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.09)
+    for i in range(32):
+        s = highpass(rng.standard_normal(n), 4000) * env(n, 0.012, 0.03)
+        place(buf, s * (1.0 if i % 4 == 2 else 0.45), i * 0.25 + (0.03 if i % 2 else 0))
+    return buf
+
+
+def x120_organ():
+    buf = np.zeros(LEN)
+    chords = [[60, 63, 67, 70]] * 2 + [[58, 62, 65, 69]] * 2
+    n = int(SR * BEAT * 0.4)
+    x = t(n)
+    for bar in range(2):
+        for k, b in enumerate([0.5, 1.5, 2.5, 3.5]):
+            ch = chords[(bar * 2 + k // 2) % 4]
+            sig = sum(np.sin(osc(note(m), n)) + 0.5 * np.sin(osc(note(m) * 2, n)) + 0.25 * np.sin(osc(note(m) * 3, n)) for m in ch)
+            a = np.minimum(1, np.minimum(x / 0.005, (x[-1] - x) / 0.02))
+            place(buf, sig * a, bar * 4 + b)
+    return buf
+
+
+def x120_pluck():
+    buf = np.zeros(LEN)
+    arp = [60, 63, 67, 70, 72, 70, 67, 63, 58, 62, 65, 69, 70, 69, 65, 62]
+    n = int(SR * 0.45)
+    for i, m in enumerate(arp):
+        sig = lowpass(saw(osc(note(m), n)), 2500) * env(n, 0.002, 0.12)
+        place(buf, sig, i * 0.5)
+    return echo(buf, 0.75, 0.3, 3)
+
+
+def x120_wobble():
+    buf = np.zeros(LEN)
+    x = t(LEN)
+    roots = np.where(x < BEAT * 4, note(36), note(34))
+    sig = drive(np.sin(osc(roots, LEN)) + 0.3 * np.sin(osc(roots * 2, LEN)), 1.6)
+    lfo = 0.5 + 0.5 * np.cos(2 * np.pi * x / BEAT)       # 1拍ごとに膨らむ
+    return sig * (0.2 + 0.8 * lfo)
+
+
+def x120_bell():
+    buf = np.zeros(LEN)
+    for m, b in [(84, 0), (79, 1.5), (82, 3), (77, 4.5), (79, 6), (75, 7)]:
+        place(buf, fm_bell(note(m), int(SR * 1.2)), b)
+    return buf
+
+
+save("clap.wav", x120_clap(), 0.7)
+save("shaker.wav", x120_shaker(), 0.4)
+save("organ.wav", x120_organ(), 0.4)
+save("pluck.wav", x120_pluck(), 0.45)
+save("wobble.wav", x120_wobble(), 0.6)
+save("bell.wav", x120_bell(), 0.4)
+
+
+# ---------------- 180 BPM（Fマイナー）→ sounds/180/ ----------------
+setup(180, 16, "180")
+rng = np.random.default_rng(1801)
+
+
+def x180_ride():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.35)
+    x = t(n)
+    ride = sum(np.sign(np.sin(osc(f, n))) for f in (3120, 4370, 5890, 7110))
+    ride = highpass(ride, 3000) * env(n, 0.001, 0.12)
+    # まっすぐな8分（表を強く）＋2拍ごとに16分の引っかけ。全部16分の格子の上
+    for b in range(16):
+        place_wrap(buf, ride * (1.0 if b % 2 == 0 else 0.75), b)
+        place_wrap(buf, ride * 0.45, b + 0.5)
+        if b % 2 == 1:
+            place_wrap(buf, ride * 0.3, b + 0.75)
+    return buf
+
+
+def x180_sub():
+    buf = np.zeros(LEN)
+    roots = [29, 32, 25, 24]
+    x = t(LEN)
+    bar = np.minimum(3, (x / (BEAT * 4)).astype(int))
+    f = np.array([note(roots[i] + 12) for i in range(4)])[bar]
+    f = lowpass(f, 30)  # 音の切り替わりを少しだけ滑らせる
+    return np.sin(osc(f, LEN))
+
+
+def x180_stab():
+    buf = np.zeros(LEN)
+    ch = [65, 68, 72, 75, 79]
+    n = int(SR * 0.3)
+    x = t(n)
+    for b in (1.5, 3.75, 9.5, 11.75):
+        sig = sum(saw(osc(note(m) * (1 + 0.004 * k), n)) for k, m in enumerate(ch))
+        sig = lowpass4(sig, 1800 * np.exp(-x * 6) + 300)
+        place_wrap(buf, sig * env(n, 0.002, 0.15), b)
+    return echo(buf, 0.75, 0.4, 4)
+
+
+def x180_ghosts():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.08)
+    for i in range(64):
+        if i % 8 in (4,):          # 本物のスネアの場所はあける
+            continue
+        v = 0.25 + 0.2 * ((i * 7) % 5) / 4
+        s = highpass(rng.standard_normal(n), 1500) * env(n, 0.001, 0.025)
+        place_wrap(buf, s * v, i * 0.25)
+    for i in range(8):             # 4小節目の最後はロール
+        place_wrap(buf, highpass(rng.standard_normal(n), 1500) * env(n, 0.001, 0.03) * (0.4 + i * 0.08), 14 + i * 0.25)
+    return buf
+
+
+def x180_bleep():
+    buf = np.zeros(LEN)
+    pat = [(89, 0.5), (84, 1.25), (91, 2.75), (89, 4.5), (96, 6.25), (84, 8.5), (91, 10), (87, 12.75), (89, 14.5)]
+    n = int(SR * 0.12)
+    for m, b in pat:
+        place_wrap(buf, np.sin(osc(note(m), n)) * env(n, 0.002, 0.04), b)
+    return echo(buf, 0.5, 0.45, 5)
+
+
+def x180_choir():
+    buf = np.zeros(LEN)
+    for c, notes in enumerate([[65, 68, 72], [61, 65, 68]]):
+        n = int(SR * BEAT * 8)
+        x = t(n)
+        sig = sum(formant(note(m), n, "a") for m in notes)
+        a = np.minimum(1, np.minimum(x / 0.6, (x[-1] - x) / 0.6))
+        place_wrap(buf, sig * a, c * 8)
+    return buf
+
+
+save("ride.wav", x180_ride(), 0.35)
+save("sub.wav", x180_sub(), 0.6)
+save("stab.wav", x180_stab(), 0.45)
+save("ghosts.wav", x180_ghosts(), 0.45)
+save("bleep.wav", x180_bleep(), 0.35)
+save("choir.wav", x180_choir(), 0.4)
+
+
+# ---------------- 400 BPM（Cマイナー）→ sounds/400/ ----------------
+setup(400, 16, "400")
+rng = np.random.default_rng(4001)
+
+
+def x400_roll():
+    buf = np.zeros(LEN)
+    n = int(SR * 0.05)
+    hits = [b for b in np.arange(0, 8, 0.5)] + [8 + b for b in np.arange(0, 4, 0.25)] + [12 + b for b in np.arange(0, 4, 0.125)]
+    for k, b in enumerate(hits):
+        s = drive(highpass(rng.standard_normal(n), 1200) * env(n, 0.0005, 0.02), 3)
+        place(buf, s * (0.4 + 0.6 * b / 16), b)
+    return buf
+
+
+def x400_bass():
+    buf = np.zeros(LEN)
+    roots = [36, 36, 32, 34]
+    n = int(SR * BEAT / 2)
+    x = t(n)
+    for i in range(32):
+        m = roots[i // 8] + (12 if i % 4 == 3 else 0)
+        sig = drive(lowpass(saw(osc(note(m), n)) + saw(osc(note(m) * 1.01, n)), 900) * 2, 3)
+        place(buf, sig * np.minimum(1, np.minimum(x / 0.002, (x[-1] - x) / 0.004)), i * 0.5)
+    return buf
+
+
+def x400_rave():
+    buf = np.zeros(LEN)
+    chords = [[60, 63, 67], [60, 63, 67], [56, 60, 63], [58, 62, 65]]
+    n = int(SR * BEAT * 0.45)
+    x = t(n)
+    for i in range(16):
+        ch = chords[i // 4]
+        sig = sum(saw(osc(note(m) * d, n)) for m in ch for d in (0.995, 1.005))
+        place(buf, lowpass(sig, 3000) * env(n, 0.001, 0.05), i + 0.5)
+    return buf
+
+
+def x400_sweep():
+    x = t(LEN)
+    noise = rng.standard_normal(LEN)
+    cut = 200 + 7000 * (x / x[-1]) ** 2
+    return lowpass4(noise, cut) * (0.3 + 0.7 * x / x[-1])
+
+
+def x400_ohat():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.45)
+    for i in range(16):
+        s = drive(highpass(rng.standard_normal(n), 6000) * env(n, 0.001, 0.03), 2.5)
+        place(buf, s, i + 0.5)
+    return buf
+
+
+def x400_arp():
+    buf = np.zeros(LEN)
+    chords = [[72, 75, 79, 84], [72, 75, 79, 84], [68, 72, 75, 80], [70, 74, 77, 82]]
+    n = int(SR * BEAT / 4)
+    x = t(n)
+    for i in range(64):
+        m = chords[i // 16][i % 4]
+        sig = pulse(osc(note(m), n), 0.25) if "pulse" in globals() else np.sign(np.sin(osc(note(m), n)))
+        place(buf, sig * np.minimum(1, (x[-1] - x) / 0.003), i * 0.25)
+    return buf
+
+
+save("roll.wav", x400_roll(), 0.5)
+save("bass.wav", x400_bass(), 0.5)
+save("rave.wav", x400_rave(), 0.4)
+save("sweep.wav", x400_sweep(), 0.35)
+save("ohat.wav", x400_ohat(), 0.35)
+save("arp.wav", x400_arp(), 0.25)
+
+
+# ---------------- 1280 BPM（Cメジャー）→ sounds/1280/ ----------------
+setup(1280, 64, "1280")
+rng = np.random.default_rng(12801)
+
+
+def x1280_counter():
+    buf = np.zeros(LEN)
+    mel = [64, 67, 71, 67, 69, 64, 60, 64, 65, 69, 72, 69, 67, 71, 74, 71]
+    n = int(SR * BEAT * 4)
+    x = t(n)
+    for i, m in enumerate(mel):
+        place(buf, pulse(osc(note(m), n), 0.25) * np.minimum(1, (x[-1] - x) / 0.004), i * 4)
+    return buf
+
+
+def x1280_sqbass():
+    buf = np.zeros(LEN)
+    roots = [36, 33, 29, 31]
+    n = int(SR * BEAT * 8)
+    x = t(n)
+    for i in range(8):
+        m = roots[i // 2] + (12 if i % 2 else 0)
+        place(buf, pulse(osc(note(m), n), 0.5) * np.minimum(1, (x[-1] - x) / 0.004), i * 8)
+    return buf
+
+
+def x1280_sparkle():
+    buf = np.zeros(LEN)
+    for b in range(0, 64, 3):          # 前の版と同じだけ乱数を引いておく（後ろの音が変わらないように）
+        rng.integers(6)
+    # 4拍ごとに、その小節の和音（C → Am → F → G）を高い所で駆け上がる
+    chords = [[84, 88, 91, 96], [81, 84, 88, 93], [77, 81, 84, 89], [79, 83, 86, 91]]
+    for b in range(0, 64, 4):
+        ch = chords[b // 16]
+        m = ch[(b // 4) % 4]
+        place(buf, fm_bell(note(m), int(SR * BEAT * 4), 0.06), b)
+    return buf
+
+
+def x1280_glitch():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 0.5)
+    chunk = np.sin(osc(note(84), n)) * np.sign(rng.standard_normal(n))
+    for b in list(range(12, 16)) + list(range(28, 32, 2)) + list(range(44, 48)) + list(range(60, 64)):
+        place(buf, chunk * env(n, 0.0005, 0.01), b)
+    return buf
+
+
+def x1280_tribass():
+    buf = np.zeros(LEN)
+    roots = [48, 45, 41, 43]
+    n = int(SR * BEAT * 2)
+    x = t(n)
+    for i in range(32):
+        m = roots[i // 8] + (12 if i % 2 else 0)
+        place(buf, triangle(osc(note(m), n)) * np.minimum(1, (x[-1] - x) / 0.003), i * 2)
+    return buf
+
+
+def x1280_laser():
+    buf = np.zeros(LEN)
+    n = int(SR * BEAT * 4)
+    x = t(n)
+    for bar in range(4):
+        f = 2400 * np.exp(-x * 9) + 200
+        place(buf, pulse(osc(f, n), 0.5) * np.exp(-x * 4), bar * 16 + 12)
+    return buf
+
+
+save("counter.wav", x1280_counter(), 0.25)
+save("sqbass.wav", x1280_sqbass(), 0.3)
+save("sparkle.wav", x1280_sparkle(), 0.35)
+save("glitch.wav", x1280_glitch(), 0.3)
+save("tribass.wav", x1280_tribass(), 0.4)
+save("laser.wav", x1280_laser(), 0.25)

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Bubble Wrap | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  #sheet { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; padding: 12px; width: min(92vw, 420px); margin: 0 auto;
+           background: #cfe8ea22; border: 2px solid #9ad1d455; border-radius: 10px; touch-action: none; }
+  .bubble { aspect-ratio: 1; border-radius: 50%; border: none; padding: 0; cursor: pointer;
+            background: radial-gradient(circle at 35% 30%, #ffffffcc, #9ad1d466 45%, #9ad1d422 70%);
+            box-shadow: inset 0 -3px 6px #00000033, 0 2px 3px #0005; transition: transform .08s; }
+  .bubble.popped { background: #9ad1d41a; box-shadow: inset 0 2px 3px #0006; transform: scale(.82); cursor: default; }
+  #say { font-weight: 800; font-size: 18px; min-height: 2.6em; padding: 0 20px; margin-top: 14px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div id="sheet"></div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'puchipuchi';
+const N = 48;
+const T = {
+  en: {
+    back: '← Back', title: 'Bubble Wrap', intro: 'Pop the bubbles. That is all.',
+    lines: ['Pop.', 'Pop!', 'Satisfying.', 'Another one.', 'You will not stop, will you.', 'Pop pop.'],
+    sheet: 'Sheet cleared. Here is a new one. It never ends.',
+    rec: (p, s) => 'Bubbles popped ' + p + ' / Sheets ' + s,
+  },
+  ja: {
+    back: '← 戻る', title: 'プチプチ', intro: 'つぶしてください。それだけです。',
+    lines: ['プチ。', 'プチッ。', '気持ちいい。', 'もう一個。', 'やめられませんね。', 'プチプチ。'],
+    sheet: '1シート終わりました。次のシートです。終わりはありません。',
+    rec: (p, s) => 'つぶした数 ' + p + ' / シート ' + s,
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const sheet = document.getElementById('sheet'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let left = 0, ctx = null;
+function snap() {
+  try {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    const n = Math.floor(ctx.sampleRate * 0.03), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n / 6));
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'bandpass'; f.frequency.value = 1800 + Math.random() * 1500;
+    g.gain.value = 0.5;
+    s.buffer = b; s.connect(f).connect(g).connect(ctx.destination); s.start();
+  } catch (e) {}
+}
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'pops'), FZ.stat(APP, 'sheets')); }
+function pop(b) {
+  if (b.classList.contains('popped')) return;
+  b.classList.add('popped');
+  snap();
+  left--;
+  FZ.add(APP, 'pops', 1);
+  if (left === 0) {
+    FZ.add(APP, 'sheets', 1);
+    say.textContent = L.sheet;
+    setTimeout(newSheet, 600);
+  } else if (Math.random() < 0.15) {
+    say.textContent = L.lines[Math.floor(Math.random() * L.lines.length)];
+  }
+  show();
+}
+function newSheet() {
+  sheet.textContent = '';
+  for (let i = 0; i < N; i++) {
+    const b = document.createElement('button');
+    b.className = 'bubble';
+    b.setAttribute('aria-label', 'bubble');
+    b.addEventListener('pointerdown', e => { e.preventDefault(); pop(b); });
+    sheet.appendChild(b);
+  }
+  left = N;
+}
+newSheet();
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

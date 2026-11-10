@@ -3,7 +3,8 @@ const { openPage, readJSON } = require('./helpers/page');
 
 const profile = readJSON('data/profile.json');
 const apps = readJSON('data/apps.json');
-const { sounds } = readJSON('data/unlocks.json');
+const { sounds, presets, maxOn } = readJSON('data/unlocks.json');
+const count = bpm => sounds.filter(s => s.bpm === bpm).length;
 const ALL = sounds.map(s => s.id);
 const OPEN = { stats: { top: { boxOpen: 1 } } };
 let page;
@@ -11,6 +12,8 @@ afterEach(() => page && page.close());
 
 const active = p => { const c = p.audio.contexts[0]; return c ? [...c.active] : []; };
 const durations = p => [...new Set(active(p).map(s => s.buffer.duration.toFixed(3)))];
+const audible = p => active(p).filter(s => s.dest && s.dest.gain && s.dest.gain.value > 0);
+const selected = p => p.$$('.trk.on').map(b => b.dataset.id);
 const tab = (p, bpm) => p.$$('.tempo').find(b => b.querySelector('b').textContent === String(bpm));
 async function playing(p) { for (let i = 0; i < 20 && !active(p).length; i++) await p.wait(10); }
 
@@ -109,7 +112,7 @@ describe('coming back from a game', () => {
 describe('groove machine: tempo tabs', () => {
   test('four tabs that only say BPM, each with its collected count', async () => {
     page = await openPage('/', { save: Object.assign({ unlocked: ['kick', 'dnb-vox'] }, OPEN) });
-    expect(page.$$('.tempo').map(b => b.innerText || b.textContent)).toEqual(['120BPM1/6', '180BPM1/4', '400BPM0/4', '1280BPM0/4']);
+    expect(page.$$('.tempo').map(b => b.innerText || b.textContent)).toEqual([`120BPM1/${count(120)}`, `180BPM1/${count(180)}`, `400BPM0/${count(400)}`, `1280BPM0/${count(1280)}`]);
     expect(page.text('#count')).toBe('2 / ' + sounds.length + ' sounds');
   });
   test('shows only the selected tempo’s sounds; locked ones are hidden behind ???', async () => {
@@ -137,12 +140,14 @@ describe('groove machine: playback', () => {
     expect(page.text('#play')).toBe('まだ音源がない。アプリで遊べ（またはズルしろ）');
     expect(active(page).length).toBe(0);
   });
-  test('plays every collected loop of the tempo together, and stops', async () => {
+  test('plays the collected loops of the tempo in sync; only the selected ones are audible; stops', async () => {
     page = await openPage('/', { save });
     tab(page, 120).click();
     page.$('#play').click();
     await playing(page);
-    expect(active(page).length).toBe(6);
+    expect(active(page).length).toBe(count(120));
+    expect(audible(page).length).toBe(selected(page).length);
+    expect(selected(page).length).toBeLessThanOrEqual(maxOn);
     expect(durations(page)).toEqual(['4.000']);
     expect(new Set(active(page).map(s => s.when)).size).toBe(1);          // 同じ瞬間に頭を揃える
     page.$('#play').click();
@@ -165,14 +170,14 @@ describe('groove machine: playback', () => {
     for (const bpm of [180, 400, 120, 1280, 400]) tab(page, bpm).click();
     await page.wait(80);
     expect(durations(page)).toEqual(['2.400']);
-    expect(active(page).length).toBe(4);
+    expect(active(page).length).toBe(count(400));
   });
   test('pressing play repeatedly never stacks two copies', async () => {
     page = await openPage('/', { save });
     tab(page, 120).click();
     page.$('#play').click(); page.$('#play').click(); page.$('#play').click();   // 鳴らす→（読み込み中に）止める→鳴らす
     await page.wait(80);
-    expect(active(page).length).toBe(6);
+    expect(active(page).length).toBe(count(120));
     expect(durations(page)).toEqual(['4.000']);
   });
   test('tapping a track mutes / unmutes it', async () => {
@@ -180,11 +185,14 @@ describe('groove machine: playback', () => {
     tab(page, 120).click();
     page.$('#play').click();
     await playing(page);
-    const trk = page.$('.trk');
+    const trk = page.$('.trk.on');
+    const before = audible(page).length;
     trk.click();
     expect(trk.classList.contains('on')).toBe(false);
+    expect(audible(page).length).toBe(before - 1);
     trk.click();
     expect(trk.classList.contains('on')).toBe(true);
+    expect(audible(page).length).toBe(before);
   });
   test('cheat unlocks everything once', async () => {
     page = await openPage('/', { lang: 'ja', save: OPEN });
@@ -336,4 +344,117 @@ test('the top page loads without script errors', async () => {
   page.$('#play').click();
   await playing(page);
   expect(page.errors).toEqual([]);
+});
+
+describe('apps pager', () => {
+  const ids = apps.map(a => a.id);
+  const visible = p => p.$$('.app-page:not([inert]) a.app').map(a => a.getAttribute('href').split('/')[2]);
+  test('shows 6 games per page, with a page count', async () => {
+    page = await openPage('/', { save: OPEN });
+    expect(page.$$('.app-page').length).toBe(Math.ceil(apps.length / 6));
+    expect(visible(page)).toEqual(ids.slice(0, 6));
+    expect(page.text('.pager-count')).toBe('1 / ' + Math.ceil(apps.length / 6));
+    expect(page.$$('.app-page[inert] a.app').length).toBe(apps.length - 6);   // 見えないページはタブ移動もしない
+  });
+  test('next / previous buttons turn pages and stop at the ends', async () => {
+    page = await openPage('/', { save: OPEN });
+    expect(page.$('.pager-prev').disabled).toBe(true);
+    page.$('.pager-next').click();
+    expect(visible(page)).toEqual(ids.slice(6, 12));
+    page.$('.pager-next').click();
+    expect(visible(page)).toEqual(ids.slice(12, 18));
+    expect(page.$('.pager-next').disabled).toBe(true);
+    page.$('.pager-prev').click();
+    expect(visible(page)).toEqual(ids.slice(6, 12));
+  });
+  test('dots jump straight to a page', async () => {
+    page = await openPage('/', { save: OPEN });
+    page.$$('.pager-dots button')[2].click();
+    expect(visible(page)).toEqual(ids.slice(12, 18));
+    expect(page.$$('.pager-dots button')[2].getAttribute('aria-current')).toBe('true');
+  });
+  test('swiping left / right turns pages; a tiny drag does not', async () => {
+    page = await openPage('/', { save: OPEN });
+    const vp = page.$('.apps-viewport');
+    const swipe = (from, to) => { page.pointer(vp, 'pointerdown', { clientX: from, clientY: 100 }); page.pointer(vp, 'pointerup', { clientX: to, clientY: 105 }); };
+    swipe(300, 100);
+    expect(visible(page)).toEqual(ids.slice(6, 12));
+    swipe(100, 300);
+    expect(visible(page)).toEqual(ids.slice(0, 6));
+    swipe(200, 180);
+    expect(visible(page)).toEqual(ids.slice(0, 6));
+  });
+  test('coming back from a game opens the page that game is on', async () => {
+    page = await openPage('/', { save: OPEN, session: { 'fz-from-app': ids[17] } });
+    expect(visible(page)).toContain(ids[17]);
+    expect(page.scrolls).toContain(page.$('h1.boxname'));
+  });
+});
+
+describe('groove machine: presets and the limit', () => {
+  const all = Object.assign({ unlocked: ALL }, OPEN);
+  const ps = bpm => presets.filter(p => p.bpm === bpm);
+  test('each tempo offers its 3 presets', async () => {
+    page = await openPage('/', { lang: 'ja', save: all });
+    for (const bpm of [120, 180, 400, 1280]) {
+      tab(page, bpm).click();
+      expect(page.$$('.preset').map(b => b.querySelector('.preset-name').textContent)).toEqual(ps(bpm).map(p => p.name.ja));
+    }
+  });
+  test('picking a preset selects exactly its sounds and shows the count', async () => {
+    page = await openPage('/', { save: all });
+    tab(page, 180).click();
+    const p = ps(180)[1];
+    page.$$('.preset')[1].click();
+    expect(selected(page).sort()).toEqual([...p.sounds].sort());
+    expect(page.text('#oncount')).toBe('ON ' + p.sounds.length + '/' + maxOn);
+    expect(page.$$('.preset')[1].getAttribute('aria-pressed')).toBe('true');
+  });
+  test('a preset with sounds you do not have yet is locked and says how many are missing', async () => {
+    const p = ps(120)[0];
+    page = await openPage('/', { lang: 'ja', save: Object.assign({ unlocked: [p.sounds[0]] }, OPEN) });
+    tab(page, 120).click();
+    const b = page.$$('.preset')[0];
+    expect(b.disabled).toBe(true);
+    expect(b.textContent).toContain('🔒 あと' + (p.sounds.length - 1));
+  });
+  test('you cannot turn on more than the limit', async () => {
+    page = await openPage('/', { lang: 'ja', save: all });
+    tab(page, 120).click();
+    for (const b of page.$$('.trk.on')) b.click();          // 全部オフ
+    const trks = page.$$('.trk');
+    for (let i = 0; i < maxOn; i++) trks[i].click();
+    expect(selected(page).length).toBe(maxOn);
+    trks[maxOn].click();
+    expect(trks[maxOn].classList.contains('on')).toBe(false);
+    expect(selected(page).length).toBe(maxOn);
+    expect(page.text('#groovemsg')).toBe('同時に鳴らせるのは' + maxOn + 'つまでです');
+  });
+  test('by default a tempo starts with its first complete preset', async () => {
+    page = await openPage('/', { save: all });
+    tab(page, 400).click();
+    expect(selected(page).sort()).toEqual([...ps(400)[0].sounds].sort());
+  });
+  test('with no complete preset, the first collected sounds are on (up to the limit)', async () => {
+    const some = sounds.filter(s => s.bpm === 120).slice(-2).map(s => s.id);
+    page = await openPage('/', { save: Object.assign({ unlocked: some }, OPEN) });
+    tab(page, 120).click();
+    expect(selected(page).sort()).toEqual([...some].sort());
+  });
+  test('choosing a preset while playing changes what you hear', async () => {
+    page = await openPage('/', { save: all });
+    tab(page, 1280).click();
+    page.$('#play').click();
+    await playing(page);
+    page.$$('.preset')[2].click();
+    expect(audible(page).length).toBe(ps(1280)[2].sounds.length);
+  });
+  test('each tempo keeps its own selection', async () => {
+    page = await openPage('/', { save: all });
+    tab(page, 180).click();
+    page.$$('.preset')[2].click();
+    tab(page, 400).click();
+    tab(page, 180).click();
+    expect(selected(page).sort()).toEqual([...ps(180)[2].sounds].sort());
+  });
 });

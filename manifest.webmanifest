@@ -3,8 +3,8 @@
   "short_name": "Iwasaki",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#12101a",
-  "theme_color": "#12101a",
+  "background_color": "#f7f6f2",
+  "theme_color": "#14213d",
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
   ]

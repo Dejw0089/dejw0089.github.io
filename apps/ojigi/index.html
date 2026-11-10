@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Bow-Off | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .duel { display: flex; justify-content: center; gap: 40px; font-size: 72px; line-height: 1; height: 100px; align-items: flex-end; }
+  .duel span { display: inline-block; transition: transform .4s; transform-origin: 50% 100%; }
+  .bowing { transform: rotate(35deg); }
+  #them.bowing { transform: rotate(-35deg); }
+  #sec { font: 40px 'DotGothic16', monospace; color: #b5838d; min-height: 1.2em; margin-top: 8px; }
+  #bow { margin-top: 10px; font: 800 20px 'M PLUS Rounded 1c', sans-serif; padding: 16px 36px; background: #b5838d; color: #12101a;
+         border: none; border-radius: 999px; cursor: pointer; touch-action: none; -webkit-touch-callout: none; }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 14px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div class="duel"><span id="me">🧍</span><span id="them">🧍</span></div>
+  <div id="sec"></div>
+  <button id="bow" data-i18n="bow"></button>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'ojigi';
+const T = {
+  en: {
+    back: '← Back', title: 'Bow-Off', bow: 'Hold to bow',
+    intro: 'Hold to bow. Do not rise before they do. Whoever raises their head first loses.',
+    risen: 'They have risen. You may rise now.',
+    win: s => 'You rose last (' + s + 's). Politeness victory.', lose: s => 'You rose first (' + s + 's). Unforgivable.',
+    rec: (w, l, b) => 'Wins ' + w + ' / Losses ' + l + ' / Longest ' + b + 's',
+  },
+  ja: {
+    back: '← 戻る', title: 'お辞儀合戦', bow: '長押しでお辞儀',
+    intro: '長押しでお辞儀。相手より先に頭を上げたら負けです。',
+    risen: '相手が頭を上げました。上げてよし。',
+    win: s => '最後まで頭を下げていました（' + s + '秒）。礼儀の勝利です。', lose: s => '先に頭を上げてしまいました（' + s + '秒）。失礼です。',
+    rec: (w, l, b) => '勝ち ' + w + ' / 負け ' + l + ' / 最長 ' + b + '秒',
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const me = document.getElementById('me'), them = document.getElementById('them'), sec = document.getElementById('sec');
+const say = document.getElementById('say'), rec = document.getElementById('rec'), btn = document.getElementById('bow');
+let bowing = false, t0 = 0, riseAt = 0, tick = null;
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'wins'), FZ.stat(APP, 'losses'), FZ.stat(APP, 'best')); }
+function update() {
+  const s = (performance.now() - t0) / 1000;
+  sec.textContent = s.toFixed(1);
+  if (s >= riseAt && them.classList.contains('bowing')) { them.classList.remove('bowing'); say.textContent = L.risen; }
+}
+btn.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (bowing) return;
+  bowing = true;
+  t0 = performance.now();
+  riseAt = 1.5 + Math.random() * 4.5;      // 相手が頭を上げる秒数（毎回ちがう）
+  me.classList.add('bowing'); them.classList.add('bowing');
+  say.textContent = '';
+  tick = setInterval(update, 50);
+});
+function release() {
+  if (!bowing) return;
+  bowing = false;
+  clearInterval(tick);
+  const s = Math.round((performance.now() - t0) / 100) / 10;
+  me.classList.remove('bowing'); them.classList.remove('bowing');
+  sec.textContent = s.toFixed(1);
+  if (s >= riseAt) {
+    FZ.add(APP, 'wins', 1);
+    FZ.max(APP, 'best', s);
+    say.textContent = L.win(s);
+  } else {
+    FZ.add(APP, 'losses', 1);
+    say.textContent = L.lose(s);
+  }
+  show();
+}
+['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, release));
+btn.addEventListener('contextmenu', e => e.preventDefault());
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>

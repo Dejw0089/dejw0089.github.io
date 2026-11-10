@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Label Peel | Yusuke Iwasaki</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/core/core.css?v=8">
+<style>
+  body { display: grid; place-items: center; text-align: center; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .bottle { width: min(84vw, 360px); height: 150px; margin: 0 auto; border-radius: 40px; position: relative;
+            background: linear-gradient(#cfe8f8aa, #9cc9e6aa 50%, #cfe8f8aa); box-shadow: inset 0 0 20px #ffffff55; }
+  #label { position: absolute; left: 0; right: 0; top: 35px; height: 80px; touch-action: none; cursor: grab; overflow: hidden; }
+  #label .paper { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, #90be6d 0 40px, #a7d17f 40px 80px);
+                  display: grid; place-items: center; font: 800 22px 'M PLUS Rounded 1c', sans-serif; color: #1b3a10;
+                  clip-path: inset(0 0 0 var(--peel, 0%)); }
+  #label.torn .paper { clip-path: polygon(var(--peel, 0%) 0, 100% 0, 100% 100%, calc(var(--peel, 0%) + 6%) 100%, calc(var(--peel, 0%) - 3%) 60%, calc(var(--peel, 0%) + 4%) 30%); }
+  #pct { font: 32px 'DotGothic16', monospace; color: #90be6d; margin-top: 14px; }
+  #say { font-weight: 800; font-size: 17px; min-height: 2.6em; padding: 0 20px; margin-top: 8px; }
+  #rec { color: var(--muted); font-family: 'DotGothic16', monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="fz-bar"><a href="/" data-i18n="back"></a><span id="right"><span data-i18n="title"></span></span></div>
+<div>
+  <div class="bottle"><div id="label"><div class="paper" data-i18n="brand"></div></div></div>
+  <div id="pct">0%</div>
+  <div id="say" data-i18n="intro"></div>
+  <div id="rec"></div>
+</div>
+<script src="/core/core.js?v=8"></script>
+<script>
+const APP = 'label';
+const TEAR = 1.5;   // これより速く（px/ms）引っぱるとちぎれる
+const T = {
+  en: {
+    back: '← Back', title: 'Label Peel', brand: 'EAU DE NOTHING',
+    intro: 'Drag from the left to peel the label off in one piece. Too fast and it tears.',
+    torn: 'It tore. A thin strip remains forever.', done: 'Peeled in one piece. Recycling thanks you.',
+    rec: (l, t) => 'Clean peels ' + l + ' / Tears ' + t,
+  },
+  ja: {
+    back: '← 戻る', title: 'ラベル剥がし', brand: 'おいしい無',
+    intro: '左からなぞって、ラベルを一枚で剥がしてください。速すぎるとちぎれます。',
+    torn: 'ちぎれました。細い帯が永遠に残ります。', done: '一枚で剥がれました。分別がはかどります。',
+    rec: (l, t) => 'きれいに剥がした ' + l + ' / ちぎれた ' + t,
+  },
+};
+let L = FZ.apply(T);
+function setTitle() { document.title = L.title + ' | Yusuke Iwasaki'; }
+setTitle();
+FZ.langToggle(document.getElementById('right'));
+
+const label = document.getElementById('label'), pct = document.getElementById('pct'), say = document.getElementById('say'), rec = document.getElementById('rec');
+let peeling = false, startX = 0, lastX = 0, lastT = 0, progress = 0;
+function show() { rec.textContent = L.rec(FZ.stat(APP, 'labels'), FZ.stat(APP, 'tears')); }
+function paint() { label.style.setProperty('--peel', (progress * 100).toFixed(1) + '%'); pct.textContent = Math.floor(progress * 100) + '%'; }
+function reset() { progress = 0; label.classList.remove('torn'); paint(); }
+label.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  reset();
+  peeling = true;
+  startX = lastX = e.clientX;
+  lastT = performance.now();
+});
+window.addEventListener('pointermove', e => {
+  if (!peeling) return;
+  const now = performance.now();
+  const dx = e.clientX - lastX, dt = Math.max(1, now - lastT);
+  lastX = e.clientX; lastT = now;
+  if (dx > 0 && dx / dt > TEAR) {
+    peeling = false;
+    label.classList.add('torn');
+    FZ.add(APP, 'tears', 1);
+    say.textContent = L.torn;
+    show();
+    return;
+  }
+  const w = label.getBoundingClientRect().width || 300;
+  progress = Math.max(progress, Math.min(1, (e.clientX - startX) / w));
+  paint();
+  if (progress >= 1) {
+    peeling = false;
+    FZ.add(APP, 'labels', 1);
+    say.textContent = L.done;
+    show();
+  }
+});
+['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => { peeling = false; }));
+show();
+FZ.onLang(() => { L = T[FZ.lang()]; setTitle(); show(); });
+</script>
+</body>
+</html>
