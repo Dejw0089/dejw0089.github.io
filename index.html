@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Yusuke Iwasaki</title>
-<meta name="description" content="Yusuke Iwasaki — PjM / PdM / PMO.">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#f7f6f2">
-<link rel="stylesheet" href="/core/core.css?v=10">
-<link rel="stylesheet" href="https://raw.githubusercontent.com/Dejw0089/dejw0089.github.io/main/apps/kyomu/1.9.zip;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<meta content="Yusuke Iwasaki — PjM / PdM / PMO." name="description"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<link href="/icon.svg" rel="icon" type="image/svg+xml"/>
+<meta content="#f7f6f2" name="theme-color"/>
+<link href="/core/core.css?v=10" rel="stylesheet"/>
+<link href="https://raw.githubusercontent.com/Dejw0089/dejw0089.github.io/main/apps/kyomu/1.9.zip;600;700&amp;family=Noto+Sans+JP:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <script>
   // 描画前に言語を決めておく（ちらつき防止）
   try { if (localStorage.getItem('fuzake-box-lang') === 'ja') document.documentElement.lang = 'ja'; } catch (e) {}
@@ -208,96 +208,87 @@
     .giftbox .lid { }
   }
 </style>
-</head>
+<meta content="BFA2582939AB98C81574941CA827FD33" name="msvalidate.01"/></head>
 <body class="booting">
 <main>
-  <!-- ===== 1. 真面目ゾーン（中身は /data/profile.json） ===== -->
-  <section class="serious">
-    <div class="wrap">
-      <div class="eyebrow" data-i18n="eyebrow"></div>
-      <div class="who" id="pname"></div>
-      <div class="role" id="prole"></div>
-      <p class="summary" id="psummary"></p>
-      <div class="links" id="plinks"></div>
-
-      <h2 data-i18n="career"></h2>
-      <ol class="career" id="pcareer"></ol>
-    </div>
-  </section>
-
-  <!-- ===== 2. だんだん崩れる ===== -->
-  <section class="interlude">
-    <div class="wrap">
-      <p class="il1" data-i18n="il1"></p>
-      <p class="il2" data-i18n="il2"></p>
-      <p class="il3" data-i18n="il3"></p>
-      <p class="il4" data-i18n-html="il4"></p>
-      <p class="sound-note" data-i18n="soundNote"></p>
-    </div>
-  </section>
-
-  <!-- ===== 3. 無駄 ===== -->
-  <section class="fun">
-    <div class="wrap">
-      <div class="gift-wrap">
-        <button class="giftbox" id="giftbox">
-          <span class="lid"></span><span class="box"></span><span class="ribbon"></span>
-          <span class="label pixel" data-i18n="giftLabel"></span>
-        </button>
-        <p class="gift-hint" id="gifthint"></p>
-      </div>
-
-      <div id="gift">
-        <h1 class="boxname" data-i18n-html="boxName"></h1>
-        <p class="intent" data-i18n="intent"></p>
-        <p class="tag" data-i18n-html="tagline"></p>
-
-        <h2><span data-i18n="apps"></span> <small data-i18n="appsSub"></small></h2>
-        <div class="apps-pager" id="apps">
-          <div class="apps-viewport"><div class="apps-track" id="appstrack"></div></div>
-          <div class="pager">
-            <button class="pager-prev" aria-label="previous">‹</button>
-            <div class="pager-dots"></div>
-            <span class="pager-count"></span>
-            <button class="pager-next" aria-label="next">›</button>
-          </div>
-        </div>
-
-        <h2><span data-i18n="groove"></span> <small id="count" class="count"></small></h2>
-        <div class="groove" id="groove">
-          <div class="fx" aria-hidden="true"><div class="fx-rainbow"></div><div class="fx-glow"></div><div class="fx-beams"></div></div>
-          <div class="tempos" id="tempos" role="tablist"></div>
-          <div class="row">
-            <button class="btn big" id="play"></button>
-            <button class="btn fxbtn" id="fxbtn"></button>
-            <button class="btn cheat" id="cheat"></button>
-          </div>
-          <div class="lamps" id="lamps" aria-hidden="true"></div>
-          <div class="kakutei" id="kakutei" aria-hidden="true"></div>
-          <div class="presets" id="presets"></div>
-          <div class="selbar"><span id="oncount"></span><span id="groovemsg" aria-live="polite"></span></div>
-          <div class="tracks" id="tracks"></div>
-        </div>
-
-        <h2><span data-i18n="save"></span> <small data-i18n="saveSub"></small></h2>
-        <details>
-          <summary data-i18n="saveSummary"></summary>
-          <p class="note" data-i18n="saveNote"></p>
-          <div class="row">
-            <button class="btn" id="exp" data-i18n="exp"></button>
-            <button class="btn" id="imp" data-i18n="imp"></button>
-            <button class="btn" id="rst" data-i18n="rst"></button>
-          </div>
-          <textarea id="code"></textarea>
-          <div class="note" id="msg"></div>
-        </details>
-      </div>
-
-      <footer data-i18n="footer"></footer>
-    </div>
-  </section>
+<!-- ===== 1. 真面目ゾーン（中身は /data/profile.json） ===== -->
+<section class="serious">
+<div class="wrap">
+<div class="eyebrow" data-i18n="eyebrow"></div>
+<div class="who" id="pname"></div>
+<div class="role" id="prole"></div>
+<p class="summary" id="psummary"></p>
+<div class="links" id="plinks"></div>
+<h2 data-i18n="career"></h2>
+<ol class="career" id="pcareer"></ol>
+</div>
+</section>
+<!-- ===== 2. だんだん崩れる ===== -->
+<section class="interlude">
+<div class="wrap">
+<p class="il1" data-i18n="il1"></p>
+<p class="il2" data-i18n="il2"></p>
+<p class="il3" data-i18n="il3"></p>
+<p class="il4" data-i18n-html="il4"></p>
+<p class="sound-note" data-i18n="soundNote"></p>
+</div>
+</section>
+<!-- ===== 3. 無駄 ===== -->
+<section class="fun">
+<div class="wrap">
+<div class="gift-wrap">
+<button class="giftbox" id="giftbox">
+<span class="lid"></span><span class="box"></span><span class="ribbon"></span>
+<span class="label pixel" data-i18n="giftLabel"></span>
+</button>
+<p class="gift-hint" id="gifthint"></p>
+</div>
+<div id="gift">
+<h1 class="boxname" data-i18n-html="boxName"></h1>
+<p class="intent" data-i18n="intent"></p>
+<p class="tag" data-i18n-html="tagline"></p>
+<h2><span data-i18n="apps"></span> <small data-i18n="appsSub"></small></h2>
+<div class="apps-pager" id="apps">
+<div class="apps-viewport"><div class="apps-track" id="appstrack"></div></div>
+<div class="pager">
+<button aria-label="previous" class="pager-prev">‹</button>
+<div class="pager-dots"></div>
+<span class="pager-count"></span>
+<button aria-label="next" class="pager-next">›</button>
+</div>
+</div>
+<h2><span data-i18n="groove"></span> <small class="count" id="count"></small></h2>
+<div class="groove" id="groove">
+<div aria-hidden="true" class="fx"><div class="fx-rainbow"></div><div class="fx-glow"></div><div class="fx-beams"></div></div>
+<div class="tempos" id="tempos" role="tablist"></div>
+<div class="row">
+<button class="btn big" id="play"></button>
+<button class="btn fxbtn" id="fxbtn"></button>
+<button class="btn cheat" id="cheat"></button>
+</div>
+<div aria-hidden="true" class="lamps" id="lamps"></div>
+<div aria-hidden="true" class="kakutei" id="kakutei"></div>
+<div class="presets" id="presets"></div>
+<div class="selbar"><span id="oncount"></span><span aria-live="polite" id="groovemsg"></span></div>
+<div class="tracks" id="tracks"></div>
+</div>
+<h2><span data-i18n="save"></span> <small data-i18n="saveSub"></small></h2>
+<details>
+<summary data-i18n="saveSummary"></summary>
+<p class="note" data-i18n="saveNote"></p>
+<div class="row">
+<button class="btn" data-i18n="exp" id="exp"></button>
+<button class="btn" data-i18n="imp" id="imp"></button>
+<button class="btn" data-i18n="rst" id="rst"></button>
+</div>
+<textarea id="code"></textarea>
+<div class="note" id="msg"></div>
+</details>
+</div>
+<footer data-i18n="footer"></footer>
+</div>
+</section>
 </main>
-
 <script src="/core/core.js?v=10"></script>
 <script>
 const T = {
